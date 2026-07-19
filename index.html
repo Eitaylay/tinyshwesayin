@@ -83,11 +83,28 @@
   .btn-cam:active{transform:scale(.94)}
   .btn-cam svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.8}
   .btn-cam.on{background:var(--danger)}
-  #reader{border-radius:14px; overflow:hidden; display:none}
-  #reader.show{display:block}
-  .torch{align-self:center; margin-top:-6px; padding:8px 18px; border-radius:20px;
-    border:1px solid var(--line); background:var(--paper); color:var(--ink);
-    font-size:13px; font-weight:600; cursor:pointer}
+  /* Camera modal */
+  .cam-modal{position:fixed; inset:0; background:rgba(30,26,20,.72);
+    backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:16px;
+    opacity:0; transition:opacity .25s}
+  .cam-modal.show{display:flex; opacity:1}
+  .cam-sheet{width:100%; max-width:440px; background:var(--paper); border-radius:22px;
+    overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.4);
+    transform:translateY(20px) scale(.97); transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
+  .cam-modal.show .cam-sheet{transform:translateY(0) scale(1)}
+  .cam-head{display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px; font-size:15px; font-weight:700; color:var(--ink)}
+  .cam-close{width:32px; height:32px; border:none; background:var(--ivory); border-radius:50%;
+    font-size:16px; color:var(--muted); cursor:pointer; display:flex; align-items:center;
+    justify-content:center}
+  #reader{width:100%; background:#000; min-height:260px}
+  #reader video{display:block; width:100%!important; height:auto!important}
+  .cam-actions{padding:14px 18px 20px; display:flex; flex-direction:column;
+    align-items:center; gap:10px}
+  .cam-hint{font-size:12px; color:var(--muted)}
+  .torch{padding:9px 20px; border-radius:20px; border:1px solid var(--line);
+    background:var(--paper); color:var(--ink); font-size:13px; font-weight:600; cursor:pointer}
   .torch.on{background:var(--gold); color:#fff; border-color:var(--gold)}
 
   .goldbar{background:var(--paper); border:1px solid var(--line); border-radius:14px;
@@ -122,6 +139,18 @@
   .gstd{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
   .gstd select{flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
     background:var(--paper); font-size:14px; color:var(--ink); font-weight:600; outline:none}
+  .toggle-row{display:flex; align-items:center; gap:12px; cursor:pointer}
+  .toggle-row .tl{flex:1}
+  .toggle-row .t{font-size:13px; font-weight:600; color:var(--ink)}
+  .toggle-row .s{font-size:11.5px; color:var(--muted); margin-top:2px}
+  .toggle-row input{display:none}
+  .toggle-row .switch{flex:0 0 auto; width:44px; height:26px; border-radius:20px;
+    background:var(--line); position:relative; transition:background .2s}
+  .toggle-row .switch::after{content:""; position:absolute; top:3px; left:3px; width:20px;
+    height:20px; border-radius:50%; background:#fff; transition:transform .2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle-row input:checked ~ .switch{background:var(--gold)}
+  .toggle-row input:checked ~ .switch::after{transform:translateX(18px)}
   input[type=file]{display:none}
 
   .foot{text-align:center; font-size:11px; color:var(--muted); line-height:1.6; padding:0 8px}
@@ -160,9 +189,6 @@
       <svg viewBox="0 0 24 24"><path d="M3 9V7a2 2 0 012-2h2M17 5h2a2 2 0 012 2v2M21 15v2a2 2 0 01-2 2h-2M7 19H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
     </button>
   </div>
-  <div id="reader"></div>
-  <button id="torchBtn" class="torch" style="display:none">🔦 Flash</button>
-
   <div class="goldbar" id="goldbar">
     <div class="toprow">
       <label>Academy Gold Price <span class="synced">· GitHub</span></label>
@@ -186,6 +212,14 @@
           <option value="16.329325">16.329325</option>
         </select>
       </div>
+      <label class="toggle-row">
+        <div class="tl">
+          <div class="t">ရောင်းအလျော့ တွက်ချက်ခြင်း</div>
+          <div class="s">ဖွင့်ရင် Sell Wastage K/P/Y ကို တန်ဖိုးထဲ ထည့်တွက်မယ်</div>
+        </div>
+        <input type="checkbox" id="wasteToggle" checked>
+        <span class="switch"></span>
+      </label>
       <label class="upload" id="stockUpload">
         <div class="t">📦 Stock CSV — manual (fallback)</div>
         <div class="s" id="stockStatus">repo fetch မအောင်ရင် ဒီကနေ တင်</div>
@@ -197,6 +231,21 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။
+  </div>
+</div>
+
+<!-- Camera scan modal -->
+<div class="cam-modal" id="camModal">
+  <div class="cam-sheet">
+    <div class="cam-head">
+      <span>Barcode / QR Scan</span>
+      <button class="cam-close" id="camClose">✕</button>
+    </div>
+    <div id="reader"></div>
+    <div class="cam-actions">
+      <button id="torchBtn" class="torch" style="display:none">🔦 Flash</button>
+      <div class="cam-hint">Barcode / QR ကို frame ထဲ ထားပါ</div>
+    </div>
   </div>
 </div>
 
@@ -233,6 +282,7 @@ function pick(row, cands){
 }
 
 function gramStandard(){ return parseFloat($("gramStd").value)||16.6; }
+function wasteEnabled(){ const el=$("wasteToggle"); return el ? el.checked : true; }
 
 // grams -> {k,p,y}   (yway = g/gramStandard*128; 1K=128Y, 1P=8Y)
 function gramsToKPY(g){
@@ -269,18 +319,24 @@ function lookup(barcode){
   if(!code) return null;
   const row=stockIndex[code];
   if(!row) return {status:"Not Found"};
-  if(row.s!=="In Stock") return {status:row.s||"Not Found", item:row};
+
+  // "Sold" items: no value shown. Every other status (In Stock, Inactive,
+  // etc.) shows the calculated value.
+  const isSold = row.s.toLowerCase()==="sold";
+  if(isSold) return {status:row.s, item:row, sold:true};
 
   const gs=gramStandard();
   const p=purityMap[norm(row.p)];
   const perK=p?purityPrice(p):0;
 
+  // Sell wastage only counts when the toggle is on (default on)
+  const useWaste = wasteEnabled();
   const itemYway=(row.w/gs)*128;
   const gemYway=row.gk*128+row.gp*8+row.gy;
-  const sellYway=row.wk*128+row.wp*8+row.wy;
+  const sellYway=useWaste ? (row.wk*128+row.wp*8+row.wy) : 0;
   const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
   const value=Math.ceil(raw/1000)*1000;   // ROUNDUP(...,-3)
-  return {status:"In Stock", value, item:row};
+  return {status:row.s||"In Stock", value, item:row};
 }
 
 const esc = s => (s||"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -334,6 +390,7 @@ function ingestStock(rows){
     d:(pick(r,["Item Description","Description"])||"").toString(),
     c:(pick(r,["Category"])||"").toString(),
     p:(pick(r,["Purity Name"])||"").toString().trim(),
+    ln:(pick(r,["Length"])||"").toString().trim(),
     w:num(pick(r,["Item Weight_G","Item Weight G","Item Weight"])),
     gk:num(pick(r,["Gem_Weight_K"])), gp:num(pick(r,["Gem_Weight_P"])), gy:num(pick(r,["Gem_Weight_Y"])),
     bwk:num(pick(r,["Buy_Wastage_K"])), bwp:num(pick(r,["Buy_Wastage_P"])), bwy:num(pick(r,["Buy_Wastage_Y"])),
@@ -430,7 +487,8 @@ function markUpload(which,count){
 // ---- Persistence ----
 function persist(){
   try{ localStorage.setItem(LS_KEY,JSON.stringify({
-    stockRows, purityMap, academy:$("academyPrice").value, gramStd:$("gramStd").value
+    stockRows, purityMap, academy:$("academyPrice").value, gramStd:$("gramStd").value,
+    waste: wasteEnabled()
   })); }catch(e){}
 }
 function restore(){
@@ -443,6 +501,7 @@ function restore(){
     stockRows=d.stockRows; purityMap=PURITY_EMBED; reindex();
     if(d.academy)$("academyPrice").value=d.academy;
     if(d.gramStd)$("gramStd").value=d.gramStd;
+    if(typeof d.waste==="boolean"){ const w=$("wasteToggle"); if(w) w.checked=d.waste; applyWasteLock(); }
     return true;
   }catch(e){ return false; }
 }
@@ -491,7 +550,7 @@ async function toggleTorch(){
 }
 async function toggleCamera(){
   if(scanning){ await stopCamera(); return; }
-  $("reader").classList.add("show"); $("camBtn").classList.add("on"); scanning=true;
+  $("camModal").classList.add("show"); $("camBtn").classList.add("on"); scanning=true;
   const fmtsInit = (typeof Html5QrcodeSupportedFormats!=="undefined") ? [
       Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128,
       Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.CODE_93,
@@ -519,11 +578,20 @@ async function toggleCamera(){
   }catch(e){ toast("Camera ဖွင့်မရပါ"); await stopCamera(); }
 }
 async function stopCamera(){
-  scanning=false; $("camBtn").classList.remove("on"); $("reader").classList.remove("show");
+  scanning=false; $("camBtn").classList.remove("on"); $("camModal").classList.remove("show");
   const tb=$("torchBtn"); if(tb){ tb.style.display="none"; tb.classList.remove("on"); }
   torchTrack=null; torchOn=false;
   if(scanner){ try{ await scanner.stop(); scanner.clear(); }catch(e){} scanner=null; }
 }
+
+// close modal on ✕ or backdrop tap
+function wireModalClose(){
+  $("camClose").addEventListener("click", stopCamera);
+  $("camModal").addEventListener("click", e=>{ if(e.target.id==="camModal") stopCamera(); });
+}
+
+// Sell-wastage toggle lock (visual only here; controls whether wastage is used)
+function applyWasteLock(){ reRenderCurrent(); }
 
 // ---- Wire ----
 $("barcodeInput").addEventListener("input",e=>render(e.target.value));
@@ -533,7 +601,9 @@ $("academyPrice").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventD
 $("gramStd").addEventListener("change",()=>{persist();reRenderCurrent();});
 $("camBtn").addEventListener("click",toggleCamera);
 $("torchBtn").addEventListener("click",toggleTorch);
+$("wasteToggle").addEventListener("change",()=>{ persist(); reRenderCurrent(); });
 $("refreshBtn").addEventListener("click",loadFromRepo);
+wireModalClose();
 $("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.target.files[0],rows=>{
   ingestStock(rows); persist(); setStatus("ready",stockRows.length+" items · manual");
   markUpload("stock",stockRows.length); reRenderCurrent(); toast("Stock "+stockRows.length+" ခု တင်ပြီး"); }); });
