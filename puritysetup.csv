@@ -1,0 +1,12 @@
+Sign,Purity Name,Price,Currency,Purity Unit,Base Unit,Purity %,Weight Standard,Gram Equivelent,Sync
+S,မီးလင်း,9560000,MMK,16,16,1,Kyatthar,16.6,Yes
+A,၁၅ပဲရည်,8998000,MMK,16,17,0.941176470588235,Kyatthar,16.6,Yes
+B,၁၄ပဲ ၂ပြား,8741000,MMK,16,17.5,0.914285714285714,Kyatthar,16.6,Yes
+C,၁၄ပဲရည်,8498000,MMK,16,18,0.888888888888889,Kyatthar,16.6,Yes
+D,၁၂ပဲရည်,7170000,MMK,12,16,0.75,Kyatthar,16.6,Yes
+BS,ဘတ် Second,8448000,MMK,96.5,100,0.965,Bahtthar,15.2,Yes
+BPK,ဘတ် PK,64050,THB,96.5,100,0.965,Bahtthar,15.2,No
+BSG,ဘတ်ထည်,46221.852349537,MMK,96.5,100,0.965,Kyatthar,16.6,Yes
+18K-S,18K-S,590000,MMK,75,100,0.75,Gram,1,No
+18K-B,18K-B,580000,MMK,75,100,0.75,Gram,1,No
+24K,24K,700000,MMK,100,100,1,Gram,1,No
