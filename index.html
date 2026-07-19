@@ -23,125 +23,101 @@
   }
   .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; gap:14px}
 
-  /* Header */
   .head{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 2px}
   .brand{display:flex; align-items:center; gap:9px}
   .brand svg{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.5}
   .brand h1{font-size:22px; font-weight:700; letter-spacing:.3px;
     font-family:Georgia,'Times New Roman',serif; color:var(--gold)}
-  .status-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
-    font-weight:600}
-  .status-dot i{width:8px;height:8px;border-radius:50%;background:var(--danger);display:block}
+  .head-right{display:flex; align-items:center; gap:10px}
+  .status-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:600}
+  .status-dot i{width:8px;height:8px;border-radius:50%;background:var(--danger);display:block;
+    transition:background .3s}
   .status-dot.ready i{background:var(--ok)}
+  .status-dot.loading i{background:var(--gold); animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .refresh{
+    width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s;
+  }
+  .refresh:active{transform:scale(.9)}
+  .refresh svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:2}
+  .refresh.spin svg{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Price display — the signature element */
   .display{
     background:var(--paper); border:1px solid var(--line); border-radius:20px;
     box-shadow:var(--shadow); padding:26px 22px; text-align:center;
     min-height:186px; display:flex; flex-direction:column; justify-content:center;
-    gap:6px; position:relative; overflow:hidden;
-    transition:border-color .3s;
+    gap:6px; position:relative; overflow:hidden; transition:border-color .3s;
   }
   .display.instock{border-color:var(--ok)}
   .display.sold,.display.notfound{border-color:var(--danger)}
   .display .hint{color:var(--muted); font-size:14px; line-height:1.55}
-  .display .code{
-    font-size:12px; letter-spacing:1.5px; color:var(--muted);
-    font-weight:600; text-transform:uppercase;
-  }
-  .display .price{
-    font-family:Georgia,'Times New Roman',serif;
-    font-size:52px; font-weight:700; color:var(--gold); line-height:1.05;
-    letter-spacing:.5px;
-  }
+  .display .code{font-size:12px; letter-spacing:1.5px; color:var(--muted); font-weight:600; text-transform:uppercase}
+  .display .price{font-family:Georgia,'Times New Roman',serif; font-size:52px; font-weight:700;
+    color:var(--gold); line-height:1.05; letter-spacing:.5px}
   .display .price .ks{font-size:22px; color:var(--muted); font-weight:600; margin-left:4px}
   .display .desc{font-size:15px; color:var(--ink); font-weight:600}
   .display .meta{font-size:12.5px; color:var(--muted); line-height:1.7}
-  .badge{
-    display:inline-block; padding:4px 13px; border-radius:20px;
-    font-size:12px; font-weight:700; letter-spacing:.4px; margin:0 auto;
-  }
+  .badge{display:inline-block; padding:4px 13px; border-radius:20px; font-size:12px;
+    font-weight:700; letter-spacing:.4px; margin:0 auto}
   .badge.instock{background:var(--ok-bg); color:var(--ok)}
   .badge.sold,.badge.notfound{background:var(--danger-bg); color:var(--danger)}
   .price-anim{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes pop{0%{transform:scale(.86);opacity:0}100%{transform:scale(1);opacity:1}}
 
-  /* Scan input */
   .scanrow{display:flex; gap:8px}
-  .scanrow input{
-    flex:1; background:var(--paper); border:1.5px solid var(--line);
-    border-radius:13px; padding:15px 16px; font-size:17px; color:var(--ink);
-    font-weight:600; letter-spacing:.5px; outline:none; transition:border-color .2s;
-    min-width:0;
-  }
+  .scanrow input{flex:1; background:var(--paper); border:1.5px solid var(--line);
+    border-radius:13px; padding:15px 16px; font-size:17px; color:var(--ink); font-weight:600;
+    letter-spacing:.5px; outline:none; transition:border-color .2s; min-width:0}
   .scanrow input:focus{border-color:var(--gold)}
   .scanrow input::placeholder{color:var(--muted); font-weight:400; letter-spacing:0}
-  .btn-cam{
-    flex:0 0 auto; width:54px; background:var(--gold); border:none; border-radius:13px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-    transition:transform .1s, background .2s;
-  }
+  .btn-cam{flex:0 0 auto; width:54px; background:var(--gold); border:none; border-radius:13px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform .1s, background .2s}
   .btn-cam:active{transform:scale(.94)}
   .btn-cam svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.8}
   .btn-cam.on{background:var(--danger)}
-
   #reader{border-radius:14px; overflow:hidden; display:none}
   #reader.show{display:block}
 
-  /* Academy price bar */
-  .goldbar{
-    background:var(--paper); border:1px solid var(--line); border-radius:14px;
-    padding:13px 15px; display:flex; align-items:center; gap:12px;
-  }
+  .goldbar{background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:13px 15px; display:flex; align-items:center; gap:12px}
   .goldbar label{font-size:13px; color:var(--muted); font-weight:600; flex:0 0 auto}
   .goldbar .field{flex:1; display:flex; align-items:baseline; gap:5px; justify-content:flex-end}
-  .goldbar input{
-    width:100%; text-align:right; border:none; background:transparent;
+  .goldbar input{width:100%; text-align:right; border:none; background:transparent;
     font-family:Georgia,serif; font-size:20px; font-weight:700; color:var(--gold);
-    outline:none; border-bottom:1.5px dashed var(--line); padding:2px 0;
-  }
+    outline:none; border-bottom:1.5px dashed var(--line); padding:2px 0}
   .goldbar input:focus{border-bottom-color:var(--gold)}
   .goldbar .unit{font-size:12px; color:var(--muted); flex:0 0 auto; font-weight:600}
 
-  /* Setup / data card */
-  details.setup{
-    background:var(--paper); border:1px solid var(--line); border-radius:14px;
-    padding:0 15px; overflow:hidden;
-  }
-  details.setup summary{
-    padding:13px 0; font-size:13px; font-weight:600; color:var(--ink);
-    cursor:pointer; list-style:none; display:flex; align-items:center;
-    justify-content:space-between;
-  }
+  details.setup{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:0 15px; overflow:hidden}
+  details.setup summary{padding:13px 0; font-size:13px; font-weight:600; color:var(--ink);
+    cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between}
   details.setup summary::-webkit-details-marker{display:none}
   details.setup summary .chev{transition:transform .2s; color:var(--muted)}
   details.setup[open] summary .chev{transform:rotate(180deg)}
   .setup-body{padding-bottom:16px; display:flex; flex-direction:column; gap:12px}
-  .upload{
-    border:1.5px dashed var(--line); border-radius:12px; padding:14px;
-    text-align:center; cursor:pointer; transition:border-color .2s, background .2s;
-  }
+  .src-note{font-size:11.5px; color:var(--muted); line-height:1.6; background:var(--ivory);
+    border-radius:10px; padding:10px 12px}
+  .src-note b{color:var(--ink)}
+  .upload{border:1.5px dashed var(--line); border-radius:12px; padding:12px; text-align:center;
+    cursor:pointer; transition:border-color .2s, background .2s}
   .upload:hover{border-color:var(--gold); background:var(--ivory)}
   .upload.done{border-color:var(--ok); border-style:solid; background:var(--ok-bg)}
   .upload .t{font-size:13px; font-weight:600; color:var(--ink)}
   .upload .s{font-size:11.5px; color:var(--muted); margin-top:3px}
   .upload.done .s{color:var(--ok)}
-  .setup-body .gstd{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
-  .setup-body .gstd select{
-    flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
-    background:var(--paper); font-size:14px; color:var(--ink); font-weight:600; outline:none;
-  }
+  .gstd{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
+  .gstd select{flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
+    background:var(--paper); font-size:14px; color:var(--ink); font-weight:600; outline:none}
   input[type=file]{display:none}
 
   .foot{text-align:center; font-size:11px; color:var(--muted); line-height:1.6; padding:0 8px}
-
-  .toast{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px);
+  .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px);
     background:var(--ink); color:var(--ivory); padding:11px 20px; border-radius:12px;
     font-size:13px; font-weight:500; box-shadow:var(--shadow); opacity:0;
     transition:transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .35s; z-index:50;
-    max-width:90vw; text-align:center;
-  }
+    max-width:90vw; text-align:center}
   .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 </style>
 </head>
@@ -153,53 +129,41 @@
       <svg viewBox="0 0 24 24"><path d="M12 2l3 5 5 1-4 4 1 6-5-3-5 3 1-6-4-4 5-1z"/></svg>
       <h1>Shwe Sayin</h1>
     </div>
-    <div class="status-dot" id="statusDot"><i></i><span id="statusText">Data မရှိသေး</span></div>
+    <div class="head-right">
+      <div class="status-dot" id="statusDot"><i></i><span id="statusText">Loading…</span></div>
+      <button class="refresh" id="refreshBtn" title="Data အသစ်ဆွဲရန်">
+        <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.5 9a9 9 0 00-14.9-3.4L1 10m22 4l-4.6 4.4A9 9 0 013.5 15"/></svg>
+      </button>
+    </div>
   </div>
 
-  <!-- Signature: the price display -->
   <div class="display" id="display">
-    <div class="hint" id="displayHint">
-      Barcode ကို scan (သို့) ရိုက်ထည့်ပြီး<br>ဈေးကို ချက်ချင်း ကြည့်ပါ
-    </div>
+    <div class="hint" id="displayHint">Barcode ကို scan (သို့) ရိုက်ထည့်ပြီး<br>ဈေးကို ချက်ချင်း ကြည့်ပါ</div>
     <div id="displayResult" style="display:none"></div>
   </div>
 
-  <!-- Scan row -->
   <div class="scanrow">
-    <input id="barcodeInput" type="text" inputmode="text" autocomplete="off"
-           placeholder="Barcode No. — R...">
+    <input id="barcodeInput" type="text" inputmode="text" autocomplete="off" placeholder="Barcode No.">
     <button class="btn-cam" id="camBtn" title="Camera scan">
       <svg viewBox="0 0 24 24"><path d="M3 9V7a2 2 0 012-2h2M17 5h2a2 2 0 012 2v2M21 15v2a2 2 0 01-2 2h-2M7 19H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
     </button>
   </div>
   <div id="reader"></div>
 
-  <!-- Academy gold price -->
   <div class="goldbar">
     <label>Academy Gold Price</label>
-    <div class="field">
-      <input id="academyPrice" type="text" inputmode="numeric" value="9,600,000">
-    </div>
+    <div class="field"><input id="academyPrice" type="text" inputmode="numeric" value="9,600,000"></div>
     <span class="unit">MMK / ကျပ်သား</span>
   </div>
 
-  <!-- Setup -->
   <details class="setup" id="setupBox">
-    <summary>
-      <span>⚙️ Data &amp; Settings</span>
-      <span class="chev">▾</span>
-    </summary>
+    <summary><span>⚙️ Data &amp; Settings</span><span class="chev">▾</span></summary>
     <div class="setup-body">
-      <label class="upload" id="stockUpload">
-        <div class="t">📦 Stock Data (CSV)</div>
-        <div class="s" id="stockStatus">regularstockentry table ကို export ပြီး တင်ပါ</div>
-        <input type="file" id="stockFile" accept=".csv">
-      </label>
-      <label class="upload" id="purityUpload">
-        <div class="t">⚖️ Purity Setup (CSV)</div>
-        <div class="s" id="purityStatus">puritysetup table ကို export ပြီး တင်ပါ</div>
-        <input type="file" id="purityFile" accept=".csv">
-      </label>
+      <div class="src-note" id="srcNote">
+        Stock data ကို <b>GitHub repo</b> ကနေ auto ဆွဲပါတယ်။ Stock ပြောင်းရင် —
+        repo ထဲက <b>regularstockentry.csv</b> ကို replace ပြီး ဒီ app မှာ 🔄 refresh နှိပ်ရုံ။
+        (Purity က app ထဲ built-in ဖြစ်လို့ CSV မလိုတော့ပါ။)
+      </div>
       <div class="gstd">
         <span>၁ကျပ်သား ဂရမ်:</span>
         <select id="gramStd">
@@ -207,12 +171,17 @@
           <option value="16.329325">16.329325</option>
         </select>
       </div>
+      <label class="upload" id="stockUpload">
+        <div class="t">📦 Stock CSV — manual (fallback)</div>
+        <div class="s" id="stockStatus">repo fetch မအောင်ရင် ဒီကနေ တင်</div>
+        <input type="file" id="stockFile" accept=".csv">
+      </label>
     </div>
   </details>
 
   <div class="foot">
-    Data က ဒီ browser ထဲမှာပဲ သိမ်းထားပါတယ်။ Stock ပြောင်းရင် CSV ပြန်တင်ပါ။<br>
-    ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။
+    ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
+    Stock ပြောင်းရင် CSV replace + refresh။
   </div>
 </div>
 
@@ -221,297 +190,263 @@
 <script>
 "use strict";
 
-// ---------- State ----------
-let stockRows = [];      // array of objects keyed by column header
-let purityMap = {};      // Purity Name -> {price, purityUnit, baseUnit, weightStd, sync}
-const LS_KEY = "shwe_price_check_v1";
+// === CSV source URL (same repo/folder as this index.html) ===
+const CSV_STOCK  = "regularstockentry.csv";
 
-// ---------- Helpers ----------
+// Purity is embedded (rarely changes). To update: edit these values.
+const PURITY_EMBED = {"မီးလင်း":{"price":9560000.0,"pu":16.0,"bu":16.0,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":8998000.0,"pu":16.0,"bu":17.0,"ws":"Kyatthar","sync":true},"၁၄ပဲ၂ပြား":{"price":8741000.0,"pu":16.0,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8498000.0,"pu":16.0,"bu":18.0,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7170000.0,"pu":12.0,"bu":16.0,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":8448000.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":true},"ဘတ်pk":{"price":64050.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":false},"ဘတ်ထည်":{"price":46221.852349537,"pu":96.5,"bu":100.0,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"18k-b":{"price":580000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"24k":{"price":700000.0,"pu":100.0,"bu":100.0,"ws":"Gram","sync":false}};
+
+let stockRows = [];   // [{b,s,d,c,p,w,gk,gp,gy,wk,wp,wy,gc,lc}]
+let purityMap = {};   // norm(name) -> {price,pu,bu,ws,sync}  (seeded from PURITY_EMBED)
+let stockIndex = {};  // upper(barcode) -> row  (fast lookup for 3k+ items)
+const LS_KEY = "shwe_price_v2";
+
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString("en-US");
-const toast = (msg) => {
-  const t = $("toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 2200);
-};
-
-// normalise a header: lowercase, strip spaces/underscores/() for tolerant matching
+const toast = (m) => { const t=$("toast"); t.textContent=m; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200); };
 const norm = s => (s||"").toString().toLowerCase().replace(/[\s_()%]/g,"");
-// find a value in a row object by any of several candidate header names
-function pick(row, candidates){
-  const keys = Object.keys(row);
-  for(const cand of candidates){
-    const nc = norm(cand);
-    const k = keys.find(k => norm(k) === nc);
-    if(k !== undefined) return row[k];
-  }
+const num = v => { if(v==null||v==="") return 0;
+  const n=parseFloat(v.toString().replace(/,/g,"")); return isNaN(n)?0:n; };
+
+function pick(row, cands){
+  const keys=Object.keys(row);
+  for(const c of cands){ const nc=norm(c); const k=keys.find(k=>norm(k)===nc);
+    if(k!==undefined) return row[k]; }
   return undefined;
 }
-const num = v => {
-  if(v === undefined || v === null || v === "") return 0;
-  const n = parseFloat(v.toString().replace(/,/g,""));
-  return isNaN(n) ? 0 : n;
-};
 
-// ---------- Gram standard / weight-standard equivalent ----------
-function gramStandard(){ return parseFloat($("gramStd").value) || 16.6; }
-function bahtthar(){ return 15.2; }
+function gramStandard(){ return parseFloat($("gramStd").value)||16.6; }
+function gramEquiv(ws){ const w=norm(ws);
+  if(w==="bahtthar") return 15.2; if(w==="gram") return 1; return gramStandard(); }
 
-// Gram equivalent per purity row, mirroring the Excel formula
-function gramEquiv(weightStd){
-  const w = norm(weightStd);
-  if(w === "bahtthar") return bahtthar();
-  if(w === "gram") return 1;
-  return gramStandard(); // Kyatthar (default)
-}
-
-// ---------- Purity price (mirrors RecalcPurityPrices VBA) ----------
-// If Sync=Yes: CEILING( GramEquiv * Purity% / gramStandard * AcademyPrice, 1000 )
-// If Sync=No : use the price value straight from the CSV (manual, e.g. THB/18K)
+// Purity price — mirrors RecalcPurityPrices VBA
 function purityPrice(p){
-  const academy = num($("academyPrice").value);
-  const gs = gramStandard();
-  if(p.sync && academy > 0 && gs > 0){
-    const pct = p.baseUnit ? p.purityUnit / p.baseUnit : 0;
-    const raw = gramEquiv(p.weightStd) * pct / gs * academy;
-    return Math.ceil(raw / 1000) * 1000;
+  const academy=num($("academyPrice").value), gs=gramStandard();
+  if(p.sync && academy>0 && gs>0){
+    const pct = p.bu ? p.pu/p.bu : 0;
+    return Math.ceil(gramEquiv(p.ws)*pct/gs*academy/1000)*1000;
   }
-  return p.price; // manual price from CSV
+  return p.price;
 }
 
-// ---------- E6 formula, reproduced exactly ----------
-// Returns {status, value, item} for a barcode.
+// E6 formula, reproduced exactly
 function lookup(barcode){
-  const code = (barcode||"").trim().toUpperCase();
+  const code=(barcode||"").trim().toUpperCase();
   if(!code) return null;
-  const row = stockRows.find(r => (pick(r,["Barcode"])||"").toString().trim().toUpperCase() === code);
+  const row=stockIndex[code];
   if(!row) return {status:"Not Found"};
+  if(row.s!=="In Stock") return {status:row.s||"Not Found", item:row};
 
-  const status = (pick(row,["Status"])||"").toString().trim();
-  if(status !== "In Stock"){
-    return {status: status || "Not Found", item: rowInfo(row)};
-  }
+  const gs=gramStandard();
+  const p=purityMap[norm(row.p)];
+  const perK=p?purityPrice(p):0;
 
-  // --- weights ---
-  const itemG   = num(pick(row,["Item Weight_G","Item Weight G","ItemWeightG","Item Weight"]));
-  const gemK    = num(pick(row,["Gem_Weight_K","Gem Weight K"]));
-  const gemP    = num(pick(row,["Gem_Weight_P","Gem Weight P"]));
-  const gemY    = num(pick(row,["Gem_Weight_Y","Gem Weight Y"]));
-  const swK     = num(pick(row,["Sell_Wastage_K","Sell Wastage K"]));
-  const swP     = num(pick(row,["Sell_Wastage_P","Sell Wastage P"]));
-  const swY     = num(pick(row,["Sell_Wastage_Y","Sell Wastage Y"]));
-  const gemCost = num(pick(row,["Gem Cost","GemCost"]));
-  const labor   = num(pick(row,["Labor Cost","LaborCost"]));
-  const purity  = (pick(row,["Purity Name","PurityName"])||"").toString().trim();
-
-  const gs = gramStandard();
-  const p  = purityMap[norm(purity)];
-  const pricePerK = p ? purityPrice(p) : 0;
-
-  // ((((itemG/gramStd)*128) - gemYway + sellYway) * (pricePerK/128)) + gemCost + labor
-  const itemYway = (itemG / gs) * 128;
-  const gemYway  = gemK*128 + gemP*8 + gemY;
-  const sellYway = swK*128 + swP*8 + swY;
-  const raw = ((itemYway - gemYway + sellYway) * (pricePerK/128)) + gemCost + labor;
-
-  // ROUNDUP(raw, -3)  => round UP to nearest 1000
-  const value = Math.ceil(raw / 1000) * 1000;
-
-  return {status:"In Stock", value, item: rowInfo(row), purity};
+  const itemYway=(row.w/gs)*128;
+  const gemYway=row.gk*128+row.gp*8+row.gy;
+  const sellYway=row.wk*128+row.wp*8+row.wy;
+  const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
+  const value=Math.ceil(raw/1000)*1000;   // ROUNDUP(...,-3)
+  return {status:"In Stock", value, item:row};
 }
 
-function rowInfo(row){
-  return {
-    desc: (pick(row,["Item Description","Description","ItemDescription"])||"").toString(),
-    category: (pick(row,["Category"])||"").toString(),
-    purity: (pick(row,["Purity Name","PurityName"])||"").toString(),
-  };
-}
+const esc = s => (s||"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// ---------- Render ----------
 function render(barcode){
-  const disp = $("display");
-  const hint = $("displayHint");
-  const res  = $("displayResult");
-  const r = lookup(barcode);
-
-  disp.className = "display";
-  if(!r){
-    hint.style.display="block"; res.style.display="none"; return;
-  }
+  const disp=$("display"), hint=$("displayHint"), res=$("displayResult");
+  const r=lookup(barcode);
+  disp.className="display";
+  if(!r){ hint.style.display="block"; res.style.display="none"; return; }
   hint.style.display="none"; res.style.display="block";
+  const code=(barcode||"").trim().toUpperCase();
 
-  if(r.status === "In Stock"){
+  if(r.status==="In Stock"){
     disp.classList.add("instock");
-    res.innerHTML = `
-      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
+    res.innerHTML=`<div class="code">${code}</div>
       <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
-      ${r.item && r.item.desc ? `<div class="desc">${esc(r.item.desc)}</div>` : ""}
-      <div class="meta">
-        ${r.item && r.item.category ? esc(r.item.category)+" · " : ""}${esc(r.purity||"")}
-      </div>
+      ${r.item.d?`<div class="desc">${esc(r.item.d)}</div>`:""}
+      <div class="meta">${r.item.c?esc(r.item.c)+" · ":""}${esc(r.item.p||"")}</div>
       <div class="badge instock">In Stock</div>`;
-  } else if(r.status === "Not Found"){
+  } else if(r.status==="Not Found"){
     disp.classList.add("notfound");
-    res.innerHTML = `
-      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
+    res.innerHTML=`<div class="code">${code}</div>
       <div class="desc" style="margin-top:8px">Barcode မတွေ့ပါ</div>
       <div class="badge notfound" style="margin-top:10px">Not Found</div>`;
   } else {
     disp.classList.add("sold");
-    res.innerHTML = `
-      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
-      ${r.item && r.item.desc ? `<div class="desc" style="margin-top:8px">${esc(r.item.desc)}</div>` : ""}
+    res.innerHTML=`<div class="code">${code}</div>
+      ${r.item.d?`<div class="desc" style="margin-top:8px">${esc(r.item.d)}</div>`:""}
       <div class="badge sold" style="margin-top:10px">${esc(r.status)}</div>`;
   }
 }
-const esc = s => (s||"").toString().replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// ---------- CSV parsing ----------
-function parseStock(file){
-  Papa.parse(file, {header:true, skipEmptyLines:true, complete:(out)=>{
-    stockRows = out.data.filter(r => pick(r,["Barcode"]));
-    markUpload("stock", stockRows.length);
-    persist(); updateStatus();
-    toast(`Stock ${stockRows.length} ခု တင်ပြီး`);
-    reRenderCurrent();
-  }, error:()=>toast("Stock CSV ဖတ်မရပါ")});
+// ---- Build compact rows + index from parsed CSV ----
+function ingestStock(rows){
+  stockRows = rows.filter(r=>pick(r,["Barcode"])).map(r=>({
+    b:(pick(r,["Barcode"])||"").toString().trim(),
+    s:(pick(r,["Status"])||"").toString().trim(),
+    d:(pick(r,["Item Description","Description"])||"").toString(),
+    c:(pick(r,["Category"])||"").toString(),
+    p:(pick(r,["Purity Name"])||"").toString().trim(),
+    w:num(pick(r,["Item Weight_G","Item Weight G","Item Weight"])),
+    gk:num(pick(r,["Gem_Weight_K"])), gp:num(pick(r,["Gem_Weight_P"])), gy:num(pick(r,["Gem_Weight_Y"])),
+    wk:num(pick(r,["Sell_Wastage_K"])), wp:num(pick(r,["Sell_Wastage_P"])), wy:num(pick(r,["Sell_Wastage_Y"])),
+    gc:num(pick(r,["Gem Cost"])), lc:num(pick(r,["Labor Cost"])),
+  }));
+  reindex();
 }
-function parsePurity(file){
-  Papa.parse(file, {header:true, skipEmptyLines:true, complete:(out)=>{
-    purityMap = {};
-    let n = 0;
-    for(const row of out.data){
-      const name = pick(row,["Purity Name","PurityName"]);
-      if(!name) continue;
-      purityMap[norm(name)] = {
-        price:      num(pick(row,["Price"])),
-        purityUnit: num(pick(row,["Purity Unit","PurityUnit"])),
-        baseUnit:   num(pick(row,["Base Unit","BaseUnit"])),
-        weightStd:  (pick(row,["Weight Standard","WeightStandard"])||"Kyatthar").toString(),
-        sync:       norm(pick(row,["Sync"])) === "yes",
-      };
-      n++;
-    }
-    markUpload("purity", n);
-    persist(); updateStatus();
-    toast(`Purity ${n} မျိုး တင်ပြီး`);
-    reRenderCurrent();
-  }, error:()=>toast("Purity CSV ဖတ်မရပါ")});
+function reindex(){
+  stockIndex={};
+  for(const r of stockRows) stockIndex[r.b.toUpperCase()]=r;
 }
-
-function markUpload(which, count){
-  if(which==="stock"){
-    $("stockUpload").classList.add("done");
-    $("stockStatus").textContent = `✓ ${count} ခု တင်ပြီး — ပြန်တင်ရန် နှိပ်ပါ`;
-  } else {
-    $("purityUpload").classList.add("done");
-    $("purityStatus").textContent = `✓ ${count} မျိုး တင်ပြီး — ပြန်တင်ရန် နှိပ်ပါ`;
+function ingestPurity(rows){
+  purityMap={};
+  for(const r of rows){
+    const name=pick(r,["Purity Name"]); if(!name) continue;
+    purityMap[norm(name)]={
+      price:num(pick(r,["Price"])), pu:num(pick(r,["Purity Unit"])),
+      bu:num(pick(r,["Base Unit"])), ws:(pick(r,["Weight Standard"])||"Kyatthar").toString(),
+      sync:norm(pick(r,["Sync"]))==="yes",
+    };
   }
 }
 
-function updateStatus(){
-  const ready = stockRows.length>0 && Object.keys(purityMap).length>0;
-  const dot = $("statusDot");
-  if(ready){
-    dot.classList.add("ready");
-    $("statusText").textContent = `${stockRows.length} items · ready`;
-  } else {
-    dot.classList.remove("ready");
-    $("statusText").textContent = "Data မရှိသေး";
-  }
+// ---- Fetch CSVs from repo (cache-busted) ----
+async function fetchCsv(url){
+  const bust = url + "?t=" + Date.now();
+  const resp = await fetch(bust, {cache:"no-store"});
+  if(!resp.ok) throw new Error(resp.status);
+  const text = await resp.text();
+  return new Promise((res,rej)=>Papa.parse(text,{header:true,skipEmptyLines:true,
+    complete:o=>res(o.data), error:rej}));
 }
 
-// ---------- Persistence (localStorage) ----------
-function persist(){
+async function loadFromRepo(){
+  setStatus("loading","Loading…");
+  $("refreshBtn").classList.add("spin");
   try{
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      stockRows, purityMap,
-      academy: $("academyPrice").value,
-      gramStd: $("gramStd").value,
-    }));
-  }catch(e){/* quota / private mode — ignore */}
+    const stk = await fetchCsv(CSV_STOCK);
+    ingestStock(stk);
+    persist();
+    setStatus("ready", stockRows.length+" items");
+    markUpload("stock",stockRows.length);
+    reRenderCurrent();
+    toast("Stock အသစ် ရပါပြီ — "+stockRows.length+" items");
+  }catch(e){
+    // fallback to localStorage cache
+    if(restore()){
+      setStatus("ready", stockRows.length+" items · offline");
+      toast("Repo fetch မအောင် — cache သုံးထား");
+    }else{
+      setStatus("","Data မရှိ — CSV တင်ပါ");
+      toast("Data မရ — ⚙️ ထဲက CSV manual တင်ပါ");
+      $("setupBox").open=true;
+    }
+  }finally{
+    $("refreshBtn").classList.remove("spin");
+  }
+}
+
+function setStatus(cls,text){
+  const d=$("statusDot"); d.className="status-dot"+(cls?" "+cls:"");
+  $("statusText").textContent=text;
+}
+function markUpload(which,count){
+  if(which==="stock"){ $("stockUpload").classList.add("done");
+    $("stockStatus").textContent="✓ "+count+" ခု"; }
+  else { const pu=$("purityUpload"); if(pu){ pu.classList.add("done");
+    $("purityStatus").textContent="✓ "+count+" မျိုး"; } }
+}
+
+// ---- Persistence ----
+function persist(){
+  try{ localStorage.setItem(LS_KEY,JSON.stringify({
+    stockRows, purityMap, academy:$("academyPrice").value, gramStd:$("gramStd").value
+  })); }catch(e){}
 }
 function restore(){
   try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return;
-    const d = JSON.parse(raw);
-    stockRows = d.stockRows||[];
-    purityMap = d.purityMap||{};
-    if(d.academy) $("academyPrice").value = d.academy;
-    if(d.gramStd) $("gramStd").value = d.gramStd;
-    if(stockRows.length) markUpload("stock", stockRows.length);
-    if(Object.keys(purityMap).length) markUpload("purity", Object.keys(purityMap).length);
-    updateStatus();
-  }catch(e){/* ignore */}
+    const d=JSON.parse(localStorage.getItem(LS_KEY)||"null");
+    if(!d||!d.stockRows||!d.stockRows.length) {
+      if(d){ if(d.academy)$("academyPrice").value=d.academy; if(d.gramStd)$("gramStd").value=d.gramStd; }
+      return false;
+    }
+    stockRows=d.stockRows; purityMap=PURITY_EMBED; reindex();
+    if(d.academy)$("academyPrice").value=d.academy;
+    if(d.gramStd)$("gramStd").value=d.gramStd;
+    return true;
+  }catch(e){ return false; }
 }
+function reRenderCurrent(){ const v=$("barcodeInput").value; if(v.trim()) render(v); }
 
-function reRenderCurrent(){
-  const v = $("barcodeInput").value;
-  if(v.trim()) render(v);
-}
-
-// ---------- Academy price formatting ----------
 function formatAcademy(){
-  const el = $("academyPrice");
-  const n = num(el.value);
-  el.value = n ? n.toLocaleString("en-US") : "";
-  persist(); reRenderCurrent();
+  const el=$("academyPrice"), n=num(el.value);
+  el.value=n?n.toLocaleString("en-US"):""; persist(); reRenderCurrent();
 }
 
-// ---------- Camera scanning ----------
-let scanner = null, scanning = false;
+// ---- Manual CSV fallback ----
+function parseFile(file,cb){
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:o=>cb(o.data),
+    error:()=>toast("CSV ဖတ်မရပါ")});
+}
+
+// ---- Camera ----
+let scanner=null, scanning=false;
 async function toggleCamera(){
-  const reader = $("reader"), btn = $("camBtn");
-  if(scanning){
-    await stopCamera(); return;
-  }
-  reader.classList.add("show");
-  btn.classList.add("on");
-  scanning = true;
-  scanner = new Html5Qrcode("reader");
+  if(scanning){ await stopCamera(); return; }
+  $("reader").classList.add("show"); $("camBtn").classList.add("on"); scanning=true;
+  const fmtsInit = (typeof Html5QrcodeSupportedFormats!=="undefined") ? [
+      Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.ITF, Html5QrcodeSupportedFormats.CODABAR,
+      Html5QrcodeSupportedFormats.DATA_MATRIX ] : undefined;
+  scanner=new Html5Qrcode("reader", fmtsInit ? {formatsToSupport:fmtsInit} : undefined);
   try{
-    await scanner.start(
-      {facingMode:"environment"},
-      {fps:10, qrbox:{width:230, height:150},
-       formatsToSupport: undefined },
-      (decoded)=>{
-        $("barcodeInput").value = decoded;
-        render(decoded);
-        navigator.vibrate && navigator.vibrate(40);
-        stopCamera();
-      },
-      ()=>{}
-    );
-  }catch(e){
-    toast("Camera ဖွင့်မရပါ — permission ကြည့်ပါ");
-    await stopCamera();
-  }
+    const fmts = (typeof Html5QrcodeSupportedFormats!=="undefined") ? [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+      ] : undefined;
+    await scanner.start({facingMode:"environment"},
+      {fps:10, qrbox:{width:250,height:170}, formatsToSupport:fmts, aspectRatio:1.3},
+      d=>{ $("barcodeInput").value=d; render(d); navigator.vibrate&&navigator.vibrate(40); stopCamera(); },
+      ()=>{});
+  }catch(e){ toast("Camera ဖွင့်မရပါ"); await stopCamera(); }
 }
 async function stopCamera(){
-  scanning = false;
-  $("camBtn").classList.remove("on");
-  $("reader").classList.remove("show");
-  if(scanner){
-    try{ await scanner.stop(); scanner.clear(); }catch(e){}
-    scanner = null;
-  }
+  scanning=false; $("camBtn").classList.remove("on"); $("reader").classList.remove("show");
+  if(scanner){ try{ await scanner.stop(); scanner.clear(); }catch(e){} scanner=null; }
 }
 
-// ---------- Wire up ----------
-$("barcodeInput").addEventListener("input", e => render(e.target.value));
-$("barcodeInput").addEventListener("keydown", e => {
-  if(e.key === "Enter"){ e.preventDefault(); render(e.target.value); $("barcodeInput").select(); }
-});
-$("academyPrice").addEventListener("blur", formatAcademy);
-$("academyPrice").addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); e.target.blur();}});
-$("gramStd").addEventListener("change", ()=>{persist(); reRenderCurrent();});
-$("camBtn").addEventListener("click", toggleCamera);
-$("stockFile").addEventListener("change", e=>{ if(e.target.files[0]) parseStock(e.target.files[0]); });
-$("purityFile").addEventListener("change", e=>{ if(e.target.files[0]) parsePurity(e.target.files[0]); });
+// ---- Wire ----
+$("barcodeInput").addEventListener("input",e=>render(e.target.value));
+$("barcodeInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();render(e.target.value);e.target.select();} });
+$("academyPrice").addEventListener("blur",formatAcademy);
+$("academyPrice").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();e.target.blur();} });
+$("gramStd").addEventListener("change",()=>{persist();reRenderCurrent();});
+$("camBtn").addEventListener("click",toggleCamera);
+$("refreshBtn").addEventListener("click",loadFromRepo);
+$("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.target.files[0],rows=>{
+  ingestStock(rows); persist(); setStatus("ready",stockRows.length+" items · manual");
+  markUpload("stock",stockRows.length); reRenderCurrent(); toast("Stock "+stockRows.length+" ခု တင်ပြီး"); }); });
 
-restore();
-updateStatus();
+// ---- Boot: seed purity from embed, show cache, refresh stock from repo ----
+purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
+if(restore()){
+  setStatus("ready", stockRows.length+" items");
+  markUpload("stock",stockRows.length); markUpload("purity",Object.keys(purityMap).length);
+}
+loadFromRepo();
 $("barcodeInput").focus();
 </script>
 </body>
