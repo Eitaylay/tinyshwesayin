@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Shwe Sayin — ဈေးစစ်</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{
+    --ivory:#FBF9F4; --paper:#FFFFFF; --ink:#2B2620; --muted:#8A8272;
+    --gold:#9A7B1C; --gold-soft:#EFE4C4; --line:#E9E2D2;
+    --ok:#3E7A4E; --ok-bg:#E7F0E9; --danger:#B3402E; --danger-bg:#F6E4E0;
+    --shadow:0 1px 3px rgba(43,38,32,.08),0 8px 24px rgba(43,38,32,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','Padauk','Myanmar Text',sans-serif;
+    background:var(--ivory); color:var(--ink);
+    min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:16px; padding-bottom:32px;
+  }
+  .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; gap:14px}
+
+  /* Header */
+  .head{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 2px}
+  .brand{display:flex; align-items:center; gap:9px}
+  .brand svg{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.5}
+  .brand h1{font-size:22px; font-weight:700; letter-spacing:.3px;
+    font-family:Georgia,'Times New Roman',serif; color:var(--gold)}
+  .status-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
+    font-weight:600}
+  .status-dot i{width:8px;height:8px;border-radius:50%;background:var(--danger);display:block}
+  .status-dot.ready i{background:var(--ok)}
+
+  /* Price display — the signature element */
+  .display{
+    background:var(--paper); border:1px solid var(--line); border-radius:20px;
+    box-shadow:var(--shadow); padding:26px 22px; text-align:center;
+    min-height:186px; display:flex; flex-direction:column; justify-content:center;
+    gap:6px; position:relative; overflow:hidden;
+    transition:border-color .3s;
+  }
+  .display.instock{border-color:var(--ok)}
+  .display.sold,.display.notfound{border-color:var(--danger)}
+  .display .hint{color:var(--muted); font-size:14px; line-height:1.55}
+  .display .code{
+    font-size:12px; letter-spacing:1.5px; color:var(--muted);
+    font-weight:600; text-transform:uppercase;
+  }
+  .display .price{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:52px; font-weight:700; color:var(--gold); line-height:1.05;
+    letter-spacing:.5px;
+  }
+  .display .price .ks{font-size:22px; color:var(--muted); font-weight:600; margin-left:4px}
+  .display .desc{font-size:15px; color:var(--ink); font-weight:600}
+  .display .meta{font-size:12.5px; color:var(--muted); line-height:1.7}
+  .badge{
+    display:inline-block; padding:4px 13px; border-radius:20px;
+    font-size:12px; font-weight:700; letter-spacing:.4px; margin:0 auto;
+  }
+  .badge.instock{background:var(--ok-bg); color:var(--ok)}
+  .badge.sold,.badge.notfound{background:var(--danger-bg); color:var(--danger)}
+  .price-anim{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes pop{0%{transform:scale(.86);opacity:0}100%{transform:scale(1);opacity:1}}
+
+  /* Scan input */
+  .scanrow{display:flex; gap:8px}
+  .scanrow input{
+    flex:1; background:var(--paper); border:1.5px solid var(--line);
+    border-radius:13px; padding:15px 16px; font-size:17px; color:var(--ink);
+    font-weight:600; letter-spacing:.5px; outline:none; transition:border-color .2s;
+    min-width:0;
+  }
+  .scanrow input:focus{border-color:var(--gold)}
+  .scanrow input::placeholder{color:var(--muted); font-weight:400; letter-spacing:0}
+  .btn-cam{
+    flex:0 0 auto; width:54px; background:var(--gold); border:none; border-radius:13px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:transform .1s, background .2s;
+  }
+  .btn-cam:active{transform:scale(.94)}
+  .btn-cam svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.8}
+  .btn-cam.on{background:var(--danger)}
+
+  #reader{border-radius:14px; overflow:hidden; display:none}
+  #reader.show{display:block}
+
+  /* Academy price bar */
+  .goldbar{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:13px 15px; display:flex; align-items:center; gap:12px;
+  }
+  .goldbar label{font-size:13px; color:var(--muted); font-weight:600; flex:0 0 auto}
+  .goldbar .field{flex:1; display:flex; align-items:baseline; gap:5px; justify-content:flex-end}
+  .goldbar input{
+    width:100%; text-align:right; border:none; background:transparent;
+    font-family:Georgia,serif; font-size:20px; font-weight:700; color:var(--gold);
+    outline:none; border-bottom:1.5px dashed var(--line); padding:2px 0;
+  }
+  .goldbar input:focus{border-bottom-color:var(--gold)}
+  .goldbar .unit{font-size:12px; color:var(--muted); flex:0 0 auto; font-weight:600}
+
+  /* Setup / data card */
+  details.setup{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:0 15px; overflow:hidden;
+  }
+  details.setup summary{
+    padding:13px 0; font-size:13px; font-weight:600; color:var(--ink);
+    cursor:pointer; list-style:none; display:flex; align-items:center;
+    justify-content:space-between;
+  }
+  details.setup summary::-webkit-details-marker{display:none}
+  details.setup summary .chev{transition:transform .2s; color:var(--muted)}
+  details.setup[open] summary .chev{transform:rotate(180deg)}
+  .setup-body{padding-bottom:16px; display:flex; flex-direction:column; gap:12px}
+  .upload{
+    border:1.5px dashed var(--line); border-radius:12px; padding:14px;
+    text-align:center; cursor:pointer; transition:border-color .2s, background .2s;
+  }
+  .upload:hover{border-color:var(--gold); background:var(--ivory)}
+  .upload.done{border-color:var(--ok); border-style:solid; background:var(--ok-bg)}
+  .upload .t{font-size:13px; font-weight:600; color:var(--ink)}
+  .upload .s{font-size:11.5px; color:var(--muted); margin-top:3px}
+  .upload.done .s{color:var(--ok)}
+  .setup-body .gstd{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
+  .setup-body .gstd select{
+    flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
+    background:var(--paper); font-size:14px; color:var(--ink); font-weight:600; outline:none;
+  }
+  input[type=file]{display:none}
+
+  .foot{text-align:center; font-size:11px; color:var(--muted); line-height:1.6; padding:0 8px}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--ink); color:var(--ivory); padding:11px 20px; border-radius:12px;
+    font-size:13px; font-weight:500; box-shadow:var(--shadow); opacity:0;
+    transition:transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .35s; z-index:50;
+    max-width:90vw; text-align:center;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="brand">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3 5 5 1-4 4 1 6-5-3-5 3 1-6-4-4 5-1z"/></svg>
+      <h1>Shwe Sayin</h1>
+    </div>
+    <div class="status-dot" id="statusDot"><i></i><span id="statusText">Data မရှိသေး</span></div>
+  </div>
+
+  <!-- Signature: the price display -->
+  <div class="display" id="display">
+    <div class="hint" id="displayHint">
+      Barcode ကို scan (သို့) ရိုက်ထည့်ပြီး<br>ဈေးကို ချက်ချင်း ကြည့်ပါ
+    </div>
+    <div id="displayResult" style="display:none"></div>
+  </div>
+
+  <!-- Scan row -->
+  <div class="scanrow">
+    <input id="barcodeInput" type="text" inputmode="text" autocomplete="off"
+           placeholder="Barcode No. — R...">
+    <button class="btn-cam" id="camBtn" title="Camera scan">
+      <svg viewBox="0 0 24 24"><path d="M3 9V7a2 2 0 012-2h2M17 5h2a2 2 0 012 2v2M21 15v2a2 2 0 01-2 2h-2M7 19H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
+    </button>
+  </div>
+  <div id="reader"></div>
+
+  <!-- Academy gold price -->
+  <div class="goldbar">
+    <label>Academy Gold Price</label>
+    <div class="field">
+      <input id="academyPrice" type="text" inputmode="numeric" value="9,600,000">
+    </div>
+    <span class="unit">MMK / ကျပ်သား</span>
+  </div>
+
+  <!-- Setup -->
+  <details class="setup" id="setupBox">
+    <summary>
+      <span>⚙️ Data &amp; Settings</span>
+      <span class="chev">▾</span>
+    </summary>
+    <div class="setup-body">
+      <label class="upload" id="stockUpload">
+        <div class="t">📦 Stock Data (CSV)</div>
+        <div class="s" id="stockStatus">regularstockentry table ကို export ပြီး တင်ပါ</div>
+        <input type="file" id="stockFile" accept=".csv">
+      </label>
+      <label class="upload" id="purityUpload">
+        <div class="t">⚖️ Purity Setup (CSV)</div>
+        <div class="s" id="purityStatus">puritysetup table ကို export ပြီး တင်ပါ</div>
+        <input type="file" id="purityFile" accept=".csv">
+      </label>
+      <div class="gstd">
+        <span>၁ကျပ်သား ဂရမ်:</span>
+        <select id="gramStd">
+          <option value="16.6">16.6</option>
+          <option value="16.329325">16.329325</option>
+        </select>
+      </div>
+    </div>
+  </details>
+
+  <div class="foot">
+    Data က ဒီ browser ထဲမှာပဲ သိမ်းထားပါတယ်။ Stock ပြောင်းရင် CSV ပြန်တင်ပါ။<br>
+    ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+// ---------- State ----------
+let stockRows = [];      // array of objects keyed by column header
+let purityMap = {};      // Purity Name -> {price, purityUnit, baseUnit, weightStd, sync}
+const LS_KEY = "shwe_price_check_v1";
+
+// ---------- Helpers ----------
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const toast = (msg) => {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 2200);
+};
+
+// normalise a header: lowercase, strip spaces/underscores/() for tolerant matching
+const norm = s => (s||"").toString().toLowerCase().replace(/[\s_()%]/g,"");
+// find a value in a row object by any of several candidate header names
+function pick(row, candidates){
+  const keys = Object.keys(row);
+  for(const cand of candidates){
+    const nc = norm(cand);
+    const k = keys.find(k => norm(k) === nc);
+    if(k !== undefined) return row[k];
+  }
+  return undefined;
+}
+const num = v => {
+  if(v === undefined || v === null || v === "") return 0;
+  const n = parseFloat(v.toString().replace(/,/g,""));
+  return isNaN(n) ? 0 : n;
+};
+
+// ---------- Gram standard / weight-standard equivalent ----------
+function gramStandard(){ return parseFloat($("gramStd").value) || 16.6; }
+function bahtthar(){ return 15.2; }
+
+// Gram equivalent per purity row, mirroring the Excel formula
+function gramEquiv(weightStd){
+  const w = norm(weightStd);
+  if(w === "bahtthar") return bahtthar();
+  if(w === "gram") return 1;
+  return gramStandard(); // Kyatthar (default)
+}
+
+// ---------- Purity price (mirrors RecalcPurityPrices VBA) ----------
+// If Sync=Yes: CEILING( GramEquiv * Purity% / gramStandard * AcademyPrice, 1000 )
+// If Sync=No : use the price value straight from the CSV (manual, e.g. THB/18K)
+function purityPrice(p){
+  const academy = num($("academyPrice").value);
+  const gs = gramStandard();
+  if(p.sync && academy > 0 && gs > 0){
+    const pct = p.baseUnit ? p.purityUnit / p.baseUnit : 0;
+    const raw = gramEquiv(p.weightStd) * pct / gs * academy;
+    return Math.ceil(raw / 1000) * 1000;
+  }
+  return p.price; // manual price from CSV
+}
+
+// ---------- E6 formula, reproduced exactly ----------
+// Returns {status, value, item} for a barcode.
+function lookup(barcode){
+  const code = (barcode||"").trim().toUpperCase();
+  if(!code) return null;
+  const row = stockRows.find(r => (pick(r,["Barcode"])||"").toString().trim().toUpperCase() === code);
+  if(!row) return {status:"Not Found"};
+
+  const status = (pick(row,["Status"])||"").toString().trim();
+  if(status !== "In Stock"){
+    return {status: status || "Not Found", item: rowInfo(row)};
+  }
+
+  // --- weights ---
+  const itemG   = num(pick(row,["Item Weight_G","Item Weight G","ItemWeightG","Item Weight"]));
+  const gemK    = num(pick(row,["Gem_Weight_K","Gem Weight K"]));
+  const gemP    = num(pick(row,["Gem_Weight_P","Gem Weight P"]));
+  const gemY    = num(pick(row,["Gem_Weight_Y","Gem Weight Y"]));
+  const swK     = num(pick(row,["Sell_Wastage_K","Sell Wastage K"]));
+  const swP     = num(pick(row,["Sell_Wastage_P","Sell Wastage P"]));
+  const swY     = num(pick(row,["Sell_Wastage_Y","Sell Wastage Y"]));
+  const gemCost = num(pick(row,["Gem Cost","GemCost"]));
+  const labor   = num(pick(row,["Labor Cost","LaborCost"]));
+  const purity  = (pick(row,["Purity Name","PurityName"])||"").toString().trim();
+
+  const gs = gramStandard();
+  const p  = purityMap[norm(purity)];
+  const pricePerK = p ? purityPrice(p) : 0;
+
+  // ((((itemG/gramStd)*128) - gemYway + sellYway) * (pricePerK/128)) + gemCost + labor
+  const itemYway = (itemG / gs) * 128;
+  const gemYway  = gemK*128 + gemP*8 + gemY;
+  const sellYway = swK*128 + swP*8 + swY;
+  const raw = ((itemYway - gemYway + sellYway) * (pricePerK/128)) + gemCost + labor;
+
+  // ROUNDUP(raw, -3)  => round UP to nearest 1000
+  const value = Math.ceil(raw / 1000) * 1000;
+
+  return {status:"In Stock", value, item: rowInfo(row), purity};
+}
+
+function rowInfo(row){
+  return {
+    desc: (pick(row,["Item Description","Description","ItemDescription"])||"").toString(),
+    category: (pick(row,["Category"])||"").toString(),
+    purity: (pick(row,["Purity Name","PurityName"])||"").toString(),
+  };
+}
+
+// ---------- Render ----------
+function render(barcode){
+  const disp = $("display");
+  const hint = $("displayHint");
+  const res  = $("displayResult");
+  const r = lookup(barcode);
+
+  disp.className = "display";
+  if(!r){
+    hint.style.display="block"; res.style.display="none"; return;
+  }
+  hint.style.display="none"; res.style.display="block";
+
+  if(r.status === "In Stock"){
+    disp.classList.add("instock");
+    res.innerHTML = `
+      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
+      <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
+      ${r.item && r.item.desc ? `<div class="desc">${esc(r.item.desc)}</div>` : ""}
+      <div class="meta">
+        ${r.item && r.item.category ? esc(r.item.category)+" · " : ""}${esc(r.purity||"")}
+      </div>
+      <div class="badge instock">In Stock</div>`;
+  } else if(r.status === "Not Found"){
+    disp.classList.add("notfound");
+    res.innerHTML = `
+      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
+      <div class="desc" style="margin-top:8px">Barcode မတွေ့ပါ</div>
+      <div class="badge notfound" style="margin-top:10px">Not Found</div>`;
+  } else {
+    disp.classList.add("sold");
+    res.innerHTML = `
+      <div class="code">${(barcode||"").trim().toUpperCase()}</div>
+      ${r.item && r.item.desc ? `<div class="desc" style="margin-top:8px">${esc(r.item.desc)}</div>` : ""}
+      <div class="badge sold" style="margin-top:10px">${esc(r.status)}</div>`;
+  }
+}
+const esc = s => (s||"").toString().replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- CSV parsing ----------
+function parseStock(file){
+  Papa.parse(file, {header:true, skipEmptyLines:true, complete:(out)=>{
+    stockRows = out.data.filter(r => pick(r,["Barcode"]));
+    markUpload("stock", stockRows.length);
+    persist(); updateStatus();
+    toast(`Stock ${stockRows.length} ခု တင်ပြီး`);
+    reRenderCurrent();
+  }, error:()=>toast("Stock CSV ဖတ်မရပါ")});
+}
+function parsePurity(file){
+  Papa.parse(file, {header:true, skipEmptyLines:true, complete:(out)=>{
+    purityMap = {};
+    let n = 0;
+    for(const row of out.data){
+      const name = pick(row,["Purity Name","PurityName"]);
+      if(!name) continue;
+      purityMap[norm(name)] = {
+        price:      num(pick(row,["Price"])),
+        purityUnit: num(pick(row,["Purity Unit","PurityUnit"])),
+        baseUnit:   num(pick(row,["Base Unit","BaseUnit"])),
+        weightStd:  (pick(row,["Weight Standard","WeightStandard"])||"Kyatthar").toString(),
+        sync:       norm(pick(row,["Sync"])) === "yes",
+      };
+      n++;
+    }
+    markUpload("purity", n);
+    persist(); updateStatus();
+    toast(`Purity ${n} မျိုး တင်ပြီး`);
+    reRenderCurrent();
+  }, error:()=>toast("Purity CSV ဖတ်မရပါ")});
+}
+
+function markUpload(which, count){
+  if(which==="stock"){
+    $("stockUpload").classList.add("done");
+    $("stockStatus").textContent = `✓ ${count} ခု တင်ပြီး — ပြန်တင်ရန် နှိပ်ပါ`;
+  } else {
+    $("purityUpload").classList.add("done");
+    $("purityStatus").textContent = `✓ ${count} မျိုး တင်ပြီး — ပြန်တင်ရန် နှိပ်ပါ`;
+  }
+}
+
+function updateStatus(){
+  const ready = stockRows.length>0 && Object.keys(purityMap).length>0;
+  const dot = $("statusDot");
+  if(ready){
+    dot.classList.add("ready");
+    $("statusText").textContent = `${stockRows.length} items · ready`;
+  } else {
+    dot.classList.remove("ready");
+    $("statusText").textContent = "Data မရှိသေး";
+  }
+}
+
+// ---------- Persistence (localStorage) ----------
+function persist(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      stockRows, purityMap,
+      academy: $("academyPrice").value,
+      gramStd: $("gramStd").value,
+    }));
+  }catch(e){/* quota / private mode — ignore */}
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    stockRows = d.stockRows||[];
+    purityMap = d.purityMap||{};
+    if(d.academy) $("academyPrice").value = d.academy;
+    if(d.gramStd) $("gramStd").value = d.gramStd;
+    if(stockRows.length) markUpload("stock", stockRows.length);
+    if(Object.keys(purityMap).length) markUpload("purity", Object.keys(purityMap).length);
+    updateStatus();
+  }catch(e){/* ignore */}
+}
+
+function reRenderCurrent(){
+  const v = $("barcodeInput").value;
+  if(v.trim()) render(v);
+}
+
+// ---------- Academy price formatting ----------
+function formatAcademy(){
+  const el = $("academyPrice");
+  const n = num(el.value);
+  el.value = n ? n.toLocaleString("en-US") : "";
+  persist(); reRenderCurrent();
+}
+
+// ---------- Camera scanning ----------
+let scanner = null, scanning = false;
+async function toggleCamera(){
+  const reader = $("reader"), btn = $("camBtn");
+  if(scanning){
+    await stopCamera(); return;
+  }
+  reader.classList.add("show");
+  btn.classList.add("on");
+  scanning = true;
+  scanner = new Html5Qrcode("reader");
+  try{
+    await scanner.start(
+      {facingMode:"environment"},
+      {fps:10, qrbox:{width:230, height:150},
+       formatsToSupport: undefined },
+      (decoded)=>{
+        $("barcodeInput").value = decoded;
+        render(decoded);
+        navigator.vibrate && navigator.vibrate(40);
+        stopCamera();
+      },
+      ()=>{}
+    );
+  }catch(e){
+    toast("Camera ဖွင့်မရပါ — permission ကြည့်ပါ");
+    await stopCamera();
+  }
+}
+async function stopCamera(){
+  scanning = false;
+  $("camBtn").classList.remove("on");
+  $("reader").classList.remove("show");
+  if(scanner){
+    try{ await scanner.stop(); scanner.clear(); }catch(e){}
+    scanner = null;
+  }
+}
+
+// ---------- Wire up ----------
+$("barcodeInput").addEventListener("input", e => render(e.target.value));
+$("barcodeInput").addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); render(e.target.value); $("barcodeInput").select(); }
+});
+$("academyPrice").addEventListener("blur", formatAcademy);
+$("academyPrice").addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); e.target.blur();}});
+$("gramStd").addEventListener("change", ()=>{persist(); reRenderCurrent();});
+$("camBtn").addEventListener("click", toggleCamera);
+$("stockFile").addEventListener("change", e=>{ if(e.target.files[0]) parseStock(e.target.files[0]); });
+$("purityFile").addEventListener("change", e=>{ if(e.target.files[0]) parsePurity(e.target.files[0]); });
+
+restore();
+updateStatus();
+$("barcodeInput").focus();
+</script>
+</body>
+</html>
