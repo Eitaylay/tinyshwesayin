@@ -406,6 +406,7 @@ function render(barcode){
       <div class="details">
         <div class="drow"><span>အလေးချိန်</span><b>${kpyStr(wt.k,wt.p,wt.y)} <span class="g">(${it.w} g)</span></b></div>
         ${hasGem?`<div class="drow"><span>ကျောက်ချိန်</span><b>${kpyStr(it.gk,it.gp,it.gy)}</b></div>`:""}
+        ${!showWaste?`<div class="drow"><span>ရောင်းအလျော့ <span class="g">(မတွက်)</span></span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
         ${it.gc?`<div class="drow"><span>ကျောက်ဖိုး</span><b>${fmt(it.gc)} Ks</b></div>`:""}
         ${it.lc?`<div class="drow"><span>လက်ခ</span><b>${fmt(it.lc)} Ks</b></div>`:""}
       </div>
