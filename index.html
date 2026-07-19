@@ -72,6 +72,15 @@
   .price-anim{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes pop{0%{transform:scale(.86);opacity:0}100%{transform:scale(1);opacity:1}}
 
+  .wedit{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+  .wedit .wlab{font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px; text-align:left}
+  .wedit .winrow{display:flex; gap:8px}
+  .wedit .wcell{flex:1; display:flex; flex-direction:column; gap:4px}
+  .wedit .wcell span{font-size:11px; color:var(--muted); text-align:center; font-weight:600}
+  .wedit .win{width:100%; text-align:center; border:1.5px solid var(--line); border-radius:10px;
+    padding:9px 6px; font-size:16px; font-weight:600; color:var(--ink); outline:none; background:var(--paper)}
+  .wedit .win:focus{border-color:var(--gold)}
+
   .scanrow{display:flex; gap:8px}
   .scanrow input{flex:1; background:var(--paper); border:1.5px solid var(--line);
     border-radius:13px; padding:15px 16px; font-size:17px; color:var(--ink); font-weight:600;
@@ -325,7 +334,35 @@ function purityPrice(p){
   return p.price;
 }
 
-// E6 formula, reproduced exactly
+// ---- Current item's editable sell-wastage (mirrors POS K2/P2/Y2) ----
+let curCode = "";                 // barcode currently shown
+let curWaste = {k:0,p:0,y:0};     // sell wastage in effect (editable when toggle on)
+
+// Value of an in-stock item given a sell-wastage {k,p,y}.
+// Formula mirrors Regular POS Handle_BarcodeEntry / Handle_WastageChange exactly.
+function computeValue(row, waste){
+  const gs=gramStandard();
+  const p=purityMap[norm(row.p)];
+  const perK=p?purityPrice(p):0;
+  const useWaste = wasteEnabled();
+  const w = useWaste ? waste : {k:0,p:0,y:0};   // toggle off -> no sell wastage
+  const itemYway=(row.w/gs)*128;
+  const gemYway=row.gk*128+row.gp*8+row.gy;
+  const sellYway=w.k*128 + w.p*8 + w.y;
+  const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
+  return { value: Math.ceil(raw/1000)*1000, perK };   // ROUNDUP(...,-3)
+}
+
+// Live recompute when the K/P/Y boxes are edited — updates the price only,
+// so the inputs keep focus and you can keep typing.
+function onWasteInput(){
+  const it = stockIndex[curCode];
+  if(!it) return;
+  curWaste = { k:num($("wK").value), p:num($("wP").value), y:num($("wY").value) };
+  const cv = computeValue(it, curWaste);
+  const pv = $("priceVal"); if(pv) pv.textContent = fmt(cv.value);
+}
+
 function lookup(barcode){
   const code=(barcode||"").trim().toUpperCase();
   if(!code) return null;
@@ -337,18 +374,7 @@ function lookup(barcode){
   const isSold = row.s.toLowerCase()==="sold";
   if(isSold) return {status:row.s, item:row, sold:true};
 
-  const gs=gramStandard();
-  const p=purityMap[norm(row.p)];
-  const perK=p?purityPrice(p):0;
-
-  // Sell wastage only counts when the toggle is on (default on)
-  const useWaste = wasteEnabled();
-  const itemYway=(row.w/gs)*128;
-  const gemYway=row.gk*128+row.gp*8+row.gy;
-  const sellYway=useWaste ? (row.wk*128+row.wp*8+row.wy) : 0;
-  const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
-  const value=Math.ceil(raw/1000)*1000;   // ROUNDUP(...,-3)
-  return {status:row.s||"In Stock", value, item:row};
+  return {status:row.s||"In Stock", item:row};
 }
 
 const esc = s => (s||"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -364,23 +390,33 @@ function render(barcode){
   if(r.status==="In Stock"){
     disp.classList.add("instock");
     const it=r.item;
-    const p=purityMap[norm(it.p)];
-    const perK=p?purityPrice(p):0;
+    // New item -> load its stored sell wastage as the starting point.
+    // Same item re-rendered (toggle / price change) -> keep your edits.
+    if(code!==curCode){ curCode=code; curWaste={k:it.wk||0,p:it.wp||0,y:it.wy||0}; }
+    const cv=computeValue(it, curWaste);
+    const perK=cv.perK;
     const wt=gramsToKPY(it.w);
     const hasGem=(it.gk||it.gp||it.gy);
-    const hasWaste=(it.wk||it.wp||it.wy);
+    const showWaste=wasteEnabled();
     res.innerHTML=`<div class="code">${code}</div>
-      <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
+      <div class="price price-anim"><span id="priceVal">${fmt(cv.value)}</span><span class="ks">Ks</span></div>
       ${it.d?`<div class="desc">${esc(it.d)}</div>`:""}
       <div class="meta">${it.c?esc(it.c)+" · ":""}${esc(it.p||"")}${perK?" · "+fmt(perK)+" Ks/ကျပ်သား":""}</div>
       <div class="badge instock">In Stock</div>
       <div class="details">
         <div class="drow"><span>အလေးချိန်</span><b>${kpyStr(wt.k,wt.p,wt.y)} <span class="g">(${it.w} g)</span></b></div>
         ${hasGem?`<div class="drow"><span>ကျောက်ချိန်</span><b>${kpyStr(it.gk,it.gp,it.gy)}</b></div>`:""}
-        ${hasWaste?`<div class="drow"><span>ရောင်းအလျော့</span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
         ${it.gc?`<div class="drow"><span>ကျောက်ဖိုး</span><b>${fmt(it.gc)} Ks</b></div>`:""}
         ${it.lc?`<div class="drow"><span>လက်ခ</span><b>${fmt(it.lc)} Ks</b></div>`:""}
-      </div>`;
+      </div>
+      ${showWaste?`<div class="wedit">
+        <div class="wlab">ရောင်းအလျော့ (ချိန်ညှိနိုင်)</div>
+        <div class="winrow">
+          <div class="wcell"><span>ကျပ်</span><input id="wK" class="win" type="text" inputmode="decimal" value="${curWaste.k}" oninput="onWasteInput()"></div>
+          <div class="wcell"><span>ပဲ</span><input id="wP" class="win" type="text" inputmode="decimal" value="${curWaste.p}" oninput="onWasteInput()"></div>
+          <div class="wcell"><span>ရွေး</span><input id="wY" class="win" type="text" inputmode="decimal" value="${curWaste.y}" oninput="onWasteInput()"></div>
+        </div>
+      </div>`:""}`;
   } else if(r.status==="Not Found"){
     disp.classList.add("notfound");
     res.innerHTML=`<div class="code">${code}</div>
