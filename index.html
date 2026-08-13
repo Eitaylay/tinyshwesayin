@@ -116,6 +116,21 @@
   .cam-actions{padding:14px 18px 20px; display:flex; flex-direction:column;
     align-items:center; gap:10px}
   .cam-hint{font-size:12px; color:var(--muted)}
+
+  /* Static purity price list modal */
+  .price-sheet{max-height:78vh; display:flex; flex-direction:column}
+  .price-list{overflow-y:auto; padding:4px 18px 18px}
+  .pl-group{margin-bottom:14px}
+  .pl-group:last-child{margin-bottom:4px}
+  .pl-group-label{font-size:11px; font-weight:700; letter-spacing:.6px; color:var(--muted);
+    text-transform:uppercase; padding:8px 2px 6px}
+  .pl-row{display:flex; align-items:center; justify-content:space-between;
+    padding:11px 4px; border-bottom:1px solid var(--line)}
+  .pl-row:last-child{border-bottom:none}
+  .pl-name{font-size:14px; font-weight:600; color:var(--ink)}
+  .pl-sub{font-size:11px; color:var(--muted); margin-top:1px}
+  .pl-price{font-family:Georgia,serif; font-size:17px; font-weight:700; color:var(--gold);
+    white-space:nowrap; padding-left:12px}
   .torch{padding:9px 20px; border-radius:20px; border:1px solid var(--line);
     background:var(--paper); color:var(--ink); font-size:13px; font-weight:600; cursor:pointer}
   .torch.on{background:var(--gold); color:#fff; border-color:var(--gold)}
@@ -266,6 +281,16 @@
   </div>
 </div>
 
+<div class="cam-modal" id="priceModal">
+  <div class="cam-sheet price-sheet">
+    <div class="cam-head">
+      <span>ရွှေဈေးနှုန်းများ</span>
+      <button class="cam-close" id="priceClose">✕</button>
+    </div>
+    <div class="price-list" id="priceList"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -341,18 +366,25 @@ function purityPrice(p){
 // i.e. group by weight standard (Kyatthar, then Bahtthar, then Gram),
 // and within each group sort by purity% descending.
 const WS_ORDER = {kyatthar:0, bahtthar:1, gram:2};
-function buildTicker(){
-  const track = $("tickerTrack");
-  if(!track || !PURITY_LIST.length) return;
+const WS_LABEL_MM = {kyatthar:"ကျပ်သား (Kyatthar)", bahtthar:"ဘတ် (Bahtthar)", gram:"ဂရမ် (Gram)"};
 
+function sortedPurityRows(){
   const rows = PURITY_LIST.map(p => ({
     label: p.n,
     price: purityPrice(p),
+    ws: p.ws,
     wsRank: WS_ORDER[norm(p.ws)] ?? 9,
     pct: p.bu ? p.pu/p.bu : 0,
   }));
   rows.sort((a,b) => a.wsRank - b.wsRank || b.pct - a.pct);
+  return rows;
+}
 
+function buildTicker(){
+  const track = $("tickerTrack");
+  if(!track || !PURITY_LIST.length) return;
+
+  const rows = sortedPurityRows();
   const itemsHtml = rows.map(r =>
     `<span>${esc(r.label)} <b>${fmt(r.price)}</b></span><span class="sep">•</span>`
   ).join("");
@@ -360,6 +392,34 @@ function buildTicker(){
   // duplicate the sequence once so the 50%-translate loop is seamless
   track.innerHTML = itemsHtml + itemsHtml;
 }
+
+// Static, non-scrolling list shown when the ticker is tapped — same data
+// and same sort order, grouped under weight-standard headings.
+function buildPriceList(){
+  const el = $("priceList");
+  if(!el || !PURITY_LIST.length) return;
+
+  const rows = sortedPurityRows();
+  let html = "", curWs = null;
+  for(const r of rows){
+    const wsKey = norm(r.ws);
+    if(wsKey !== curWs){
+      if(curWs !== null) html += `</div>`;
+      html += `<div class="pl-group"><div class="pl-group-label">${esc(WS_LABEL_MM[wsKey] || r.ws)}</div>`;
+      curWs = wsKey;
+    }
+    html += `<div class="pl-row">
+      <div><div class="pl-name">${esc(r.label)}</div>
+        <div class="pl-sub">${(r.pct*100).toFixed(2)}%</div></div>
+      <div class="pl-price">${fmt(r.price)} Ks</div>
+    </div>`;
+  }
+  if(curWs !== null) html += `</div>`;
+  el.innerHTML = html;
+}
+
+function openPriceList(){ buildPriceList(); $("priceModal").classList.add("show"); }
+function closePriceList(){ $("priceModal").classList.remove("show"); }
 
 // E6 formula, reproduced exactly
 function lookup(barcode){
@@ -637,6 +697,8 @@ async function stopCamera(){
 function wireModalClose(){
   $("camClose").addEventListener("click", stopCamera);
   $("camModal").addEventListener("click", e=>{ if(e.target.id==="camModal") stopCamera(); });
+  $("priceClose").addEventListener("click", closePriceList);
+  $("priceModal").addEventListener("click", e=>{ if(e.target.id==="priceModal") closePriceList(); });
 }
 
 // Sell-wastage toggle lock (visual only here; controls whether wastage is used)
@@ -657,10 +719,8 @@ $("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.
   ingestStock(rows); persist(); setStatus("ready",stockRows.length+" items · manual");
   markUpload("stock",stockRows.length); reRenderCurrent(); toast("Stock "+stockRows.length+" ခု တင်ပြီး"); }); });
 
-// tap the ticker to pause/resume (so it can actually be read)
-$("tickerWrap").addEventListener("click", ()=>{
-  $("tickerTrack").classList.toggle("paused");
-});
+// tap the ticker to see the static full price list
+$("tickerWrap").addEventListener("click", openPriceList);
 
 // ---- Boot: seed purity from embed, show cache, refresh stock from repo ----
 purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
