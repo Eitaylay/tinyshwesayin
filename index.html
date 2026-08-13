@@ -19,9 +19,22 @@
     background:var(--ivory); color:var(--ink);
     min-height:100vh; min-height:100dvh;
     display:flex; flex-direction:column; align-items:center;
-    padding:16px; padding-bottom:32px;
+    padding:16px; padding-top:44px; padding-bottom:32px;
   }
   .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; gap:14px}
+
+  /* Floating price ticker - mirrors the Excel TEXTJOIN/SORTBY board */
+  .ticker-wrap{position:fixed; top:0; left:0; right:0; height:30px; z-index:40;
+    background:var(--ink); overflow:hidden; display:flex; align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .ticker-track{display:flex; white-space:nowrap; will-change:transform;
+    animation:ticker-scroll 40s linear infinite; padding-left:100%}
+  .ticker-track.paused{animation-play-state:paused}
+  .ticker-track span{color:var(--ivory); font-size:12.5px; font-weight:600;
+    letter-spacing:.3px; padding-right:14px; display:inline-flex; align-items:center; gap:6px}
+  .ticker-track span b{color:#F0D98C; font-weight:700}
+  .ticker-track .sep{color:#6b6355; padding-right:14px}
+  @keyframes ticker-scroll{ from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
   .head{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 2px}
   .brand{display:flex; align-items:center; gap:9px}
@@ -72,15 +85,6 @@
   .price-anim{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes pop{0%{transform:scale(.86);opacity:0}100%{transform:scale(1);opacity:1}}
 
-  .wedit{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
-  .wedit .wlab{font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px; text-align:left}
-  .wedit .winrow{display:flex; gap:8px}
-  .wedit .wcell{flex:1; display:flex; flex-direction:column; gap:4px}
-  .wedit .wcell span{font-size:11px; color:var(--muted); text-align:center; font-weight:600}
-  .wedit .win{width:100%; text-align:center; border:1.5px solid var(--line); border-radius:10px;
-    padding:9px 6px; font-size:16px; font-weight:600; color:var(--ink); outline:none; background:var(--paper)}
-  .wedit .win:focus{border-color:var(--gold)}
-
   .scanrow{display:flex; gap:8px}
   .scanrow input{flex:1; background:var(--paper); border:1.5px solid var(--line);
     border-radius:13px; padding:15px 16px; font-size:17px; color:var(--ink); font-weight:600;
@@ -95,23 +99,12 @@
   /* Camera modal */
   .cam-modal{position:fixed; inset:0; background:rgba(30,26,20,.72);
     backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
-    display:none; z-index:100; padding:16px;
-    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    display:none; align-items:center; justify-content:center; z-index:100; padding:16px;
     opacity:0; transition:opacity .25s}
-  .cam-modal.show{display:block; opacity:1}
-  /* Big always-reachable close button, fixed to screen corner */
-  .cam-x{position:fixed; top:max(14px,env(safe-area-inset-top)); right:16px; z-index:120;
-    width:48px; height:48px; border-radius:50%; border:none; background:rgba(20,16,12,.85);
-    color:#fff; font-size:22px; line-height:1; display:none; align-items:center;
-    justify-content:center; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,.4)}
-  .cam-x:active{transform:scale(.92)}
-  .cam-modal.show .cam-x{display:flex}
-  .cam-sheet{width:100%; max-width:440px; margin:0 auto;
-    margin-top:max(16px,env(safe-area-inset-top)); margin-bottom:24px;
-    background:var(--paper); border-radius:22px;
+  .cam-modal.show{display:flex; opacity:1}
+  .cam-sheet{width:100%; max-width:440px; background:var(--paper); border-radius:22px;
     overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.4);
     transform:translateY(20px) scale(.97); transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
-  #reader{max-height:62vh}
   .cam-modal.show .cam-sheet{transform:translateY(0) scale(1)}
   .cam-head{display:flex; align-items:center; justify-content:space-between;
     padding:16px 18px; font-size:15px; font-weight:700; color:var(--ink)}
@@ -183,6 +176,10 @@
 </style>
 </head>
 <body>
+<div class="ticker-wrap" id="tickerWrap">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
 <div class="wrap">
 
   <div class="head">
@@ -256,7 +253,6 @@
 
 <!-- Camera scan modal -->
 <div class="cam-modal" id="camModal">
-  <button class="cam-x" id="camX" type="button" aria-label="Camera ပိတ်ရန်">✕</button>
   <div class="cam-sheet">
     <div class="cam-head">
       <span>Barcode / QR Scan</span>
@@ -283,6 +279,10 @@ const CSV_ACADEMY = "academyprice.csv";   // optional: single value, synced from
 const PURITY_EMBED = {"မီးလင်း":{"price":9560000.0,"pu":16.0,"bu":16.0,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":8998000.0,"pu":16.0,"bu":17.0,"ws":"Kyatthar","sync":true},"၁၄ပဲ၂ပြား":{"price":8741000.0,"pu":16.0,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8498000.0,"pu":16.0,"bu":18.0,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7170000.0,"pu":12.0,"bu":16.0,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":8448000.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":true},"ဘတ်pk":{"price":64050.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":false},"ဘတ်ထည်":{"price":46221.852349537,"pu":96.5,"bu":100.0,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"18k-b":{"price":580000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"24k":{"price":700000.0,"pu":100.0,"bu":100.0,"ws":"Gram","sync":false}};
 
 let stockRows = [];   // [{b,s,d,c,p,w,gk,gp,gy,wk,wp,wy,gc,lc}]
+// Original-name list (for display, e.g. ticker) - PURITY_EMBED keys are
+// normalised/lowercased and unsuitable for showing to the user.
+const PURITY_LIST = [{"n":"မီးလင်း","pu":16.0,"bu":16.0,"ws":"Kyatthar","sync":true,"price":9560000.0},{"n":"၁၅ပဲရည်","pu":16.0,"bu":17.0,"ws":"Kyatthar","sync":true,"price":8998000.0},{"n":"၁၄ပဲ ၂ပြား","pu":16.0,"bu":17.5,"ws":"Kyatthar","sync":true,"price":8741000.0},{"n":"၁၄ပဲရည်","pu":16.0,"bu":18.0,"ws":"Kyatthar","sync":true,"price":8498000.0},{"n":"၁၂ပဲရည်","pu":12.0,"bu":16.0,"ws":"Kyatthar","sync":true,"price":7170000.0},{"n":"ဘတ် Second","pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":true,"price":8448000.0},{"n":"ဘတ် PK","pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":false,"price":64050.0},{"n":"ဘတ်ထည်","pu":96.5,"bu":100.0,"ws":"Kyatthar","sync":true,"price":46221.852349537},{"n":"18K-S","pu":75.0,"bu":100.0,"ws":"Gram","sync":false,"price":590000.0},{"n":"18K-B","pu":75.0,"bu":100.0,"ws":"Gram","sync":false,"price":580000.0},{"n":"24K","pu":100.0,"bu":100.0,"ws":"Gram","sync":false,"price":700000.0}];
+
 let purityMap = {};   // norm(name) -> {price,pu,bu,ws,sync}  (seeded from PURITY_EMBED)
 let stockIndex = {};  // upper(barcode) -> row  (fast lookup for 3k+ items)
 const LS_KEY = "shwe_price_v2";
@@ -334,35 +334,34 @@ function purityPrice(p){
   return p.price;
 }
 
-// ---- Current item's editable sell-wastage (mirrors POS K2/P2/Y2) ----
-let curCode = "";                 // barcode currently shown
-let curWaste = {k:0,p:0,y:0};     // sell wastage in effect (editable when toggle on)
+// Floating ticker — mirrors:
+//   =TEXTJOIN(" ",TRUE, SORTBY(Name&" "&Price,
+//       MATCH(WeightStandard,{"Kyatthar","Bahtthar","Gram"},0),1,
+//       Purity%,-1))
+// i.e. group by weight standard (Kyatthar, then Bahtthar, then Gram),
+// and within each group sort by purity% descending.
+const WS_ORDER = {kyatthar:0, bahtthar:1, gram:2};
+function buildTicker(){
+  const track = $("tickerTrack");
+  if(!track || !PURITY_LIST.length) return;
 
-// Value of an in-stock item given a sell-wastage {k,p,y}.
-// Formula mirrors Regular POS Handle_BarcodeEntry / Handle_WastageChange exactly.
-function computeValue(row, waste){
-  const gs=gramStandard();
-  const p=purityMap[norm(row.p)];
-  const perK=p?purityPrice(p):0;
-  const useWaste = wasteEnabled();
-  const w = useWaste ? waste : {k:0,p:0,y:0};   // toggle off -> no sell wastage
-  const itemYway=(row.w/gs)*128;
-  const gemYway=row.gk*128+row.gp*8+row.gy;
-  const sellYway=w.k*128 + w.p*8 + w.y;
-  const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
-  return { value: Math.ceil(raw/1000)*1000, perK };   // ROUNDUP(...,-3)
+  const rows = PURITY_LIST.map(p => ({
+    label: p.n,
+    price: purityPrice(p),
+    wsRank: WS_ORDER[norm(p.ws)] ?? 9,
+    pct: p.bu ? p.pu/p.bu : 0,
+  }));
+  rows.sort((a,b) => a.wsRank - b.wsRank || b.pct - a.pct);
+
+  const itemsHtml = rows.map(r =>
+    `<span>${esc(r.label)} <b>${fmt(r.price)}</b></span><span class="sep">•</span>`
+  ).join("");
+
+  // duplicate the sequence once so the 50%-translate loop is seamless
+  track.innerHTML = itemsHtml + itemsHtml;
 }
 
-// Live recompute when the K/P/Y boxes are edited — updates the price only,
-// so the inputs keep focus and you can keep typing.
-function onWasteInput(){
-  const it = stockIndex[curCode];
-  if(!it) return;
-  curWaste = { k:num($("wK").value), p:num($("wP").value), y:num($("wY").value) };
-  const cv = computeValue(it, curWaste);
-  const pv = $("priceVal"); if(pv) pv.textContent = fmt(cv.value);
-}
-
+// E6 formula, reproduced exactly
 function lookup(barcode){
   const code=(barcode||"").trim().toUpperCase();
   if(!code) return null;
@@ -374,7 +373,18 @@ function lookup(barcode){
   const isSold = row.s.toLowerCase()==="sold";
   if(isSold) return {status:row.s, item:row, sold:true};
 
-  return {status:row.s||"In Stock", item:row};
+  const gs=gramStandard();
+  const p=purityMap[norm(row.p)];
+  const perK=p?purityPrice(p):0;
+
+  // Sell wastage only counts when the toggle is on (default on)
+  const useWaste = wasteEnabled();
+  const itemYway=(row.w/gs)*128;
+  const gemYway=row.gk*128+row.gp*8+row.gy;
+  const sellYway=useWaste ? (row.wk*128+row.wp*8+row.wy) : 0;
+  const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
+  const value=Math.ceil(raw/1000)*1000;   // ROUNDUP(...,-3)
+  return {status:row.s||"In Stock", value, item:row};
 }
 
 const esc = s => (s||"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -390,34 +400,23 @@ function render(barcode){
   if(r.status==="In Stock"){
     disp.classList.add("instock");
     const it=r.item;
-    // New item -> load its stored sell wastage as the starting point.
-    // Same item re-rendered (toggle / price change) -> keep your edits.
-    if(code!==curCode){ curCode=code; curWaste={k:it.wk||0,p:it.wp||0,y:it.wy||0}; }
-    const cv=computeValue(it, curWaste);
-    const perK=cv.perK;
+    const p=purityMap[norm(it.p)];
+    const perK=p?purityPrice(p):0;
     const wt=gramsToKPY(it.w);
     const hasGem=(it.gk||it.gp||it.gy);
-    const showWaste=wasteEnabled();
+    const hasWaste=(it.wk||it.wp||it.wy);
     res.innerHTML=`<div class="code">${code}</div>
-      <div class="price price-anim"><span id="priceVal">${fmt(cv.value)}</span><span class="ks">Ks</span></div>
+      <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
       ${it.d?`<div class="desc">${esc(it.d)}</div>`:""}
       <div class="meta">${it.c?esc(it.c)+" · ":""}${esc(it.p||"")}${perK?" · "+fmt(perK)+" Ks/ကျပ်သား":""}</div>
       <div class="badge instock">In Stock</div>
       <div class="details">
         <div class="drow"><span>အလေးချိန်</span><b>${kpyStr(wt.k,wt.p,wt.y)} <span class="g">(${it.w} g)</span></b></div>
         ${hasGem?`<div class="drow"><span>ကျောက်ချိန်</span><b>${kpyStr(it.gk,it.gp,it.gy)}</b></div>`:""}
-        ${!showWaste?`<div class="drow"><span>ရောင်းအလျော့ <span class="g">(မတွက်)</span></span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
+        ${hasWaste?`<div class="drow"><span>ရောင်းအလျော့</span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
         ${it.gc?`<div class="drow"><span>ကျောက်ဖိုး</span><b>${fmt(it.gc)} Ks</b></div>`:""}
         ${it.lc?`<div class="drow"><span>လက်ခ</span><b>${fmt(it.lc)} Ks</b></div>`:""}
-      </div>
-      ${showWaste?`<div class="wedit">
-        <div class="wlab">ရောင်းအလျော့ (ချိန်ညှိနိုင်)</div>
-        <div class="winrow">
-          <div class="wcell"><span>ကျပ်</span><input id="wK" class="win" type="text" inputmode="decimal" value="${curWaste.k}" oninput="onWasteInput()"></div>
-          <div class="wcell"><span>ပဲ</span><input id="wP" class="win" type="text" inputmode="decimal" value="${curWaste.p}" oninput="onWasteInput()"></div>
-          <div class="wcell"><span>ရွေး</span><input id="wY" class="win" type="text" inputmode="decimal" value="${curWaste.y}" oninput="onWasteInput()"></div>
-        </div>
-      </div>`:""}`;
+      </div>`;
   } else if(r.status==="Not Found"){
     disp.classList.add("notfound");
     res.innerHTML=`<div class="code">${code}</div>
@@ -441,9 +440,9 @@ function ingestStock(rows){
     p:(pick(r,["Purity Name"])||"").toString().trim(),
     ln:(pick(r,["Length"])||"").toString().trim(),
     w:num(pick(r,["Item Weight_G","Item Weight G","Item Weight"])),
-    gk:num(pick(r,["Gem_Weight_K","Gem Weight K","GemWeightK"])), gp:num(pick(r,["Gem_Weight_P","Gem Weight P","GemWeightP"])), gy:num(pick(r,["Gem_Weight_Y","Gem Weight Y","GemWeightY"])),
+    gk:num(pick(r,["Gem_Weight_K"])), gp:num(pick(r,["Gem_Weight_P"])), gy:num(pick(r,["Gem_Weight_Y"])),
     bwk:num(pick(r,["Buy_Wastage_K"])), bwp:num(pick(r,["Buy_Wastage_P"])), bwy:num(pick(r,["Buy_Wastage_Y"])),
-    wk:num(pick(r,["Sell_Wastage_K","Sell Wastage K","SellWastageK","S_Wastage_K","K2"])), wp:num(pick(r,["Sell_Wastage_P","Sell Wastage P","SellWastageP","S_Wastage_P","P2"])), wy:num(pick(r,["Sell_Wastage_Y","Sell Wastage Y","SellWastageY","S_Wastage_Y","Y2"])),
+    wk:num(pick(r,["Sell_Wastage_K"])), wp:num(pick(r,["Sell_Wastage_P"])), wy:num(pick(r,["Sell_Wastage_Y"])),
     gc:num(pick(r,["Gem Cost"])), lc:num(pick(r,["Labor Cost"])),
   }));
   reindex();
@@ -489,6 +488,7 @@ async function fetchAcademy(){
       $("academyPrice").value = best.toLocaleString("en-US");
       $("goldbar").classList.add("fromgh");
       persist();
+      buildTicker();
       return true;
     }
   }catch(e){}
@@ -560,7 +560,7 @@ function formatAcademy(){
   const el=$("academyPrice"), n=num(el.value);
   el.value=n?n.toLocaleString("en-US"):"";
   $("goldbar").classList.remove("fromgh");   // manual override
-  persist(); reRenderCurrent();
+  persist(); reRenderCurrent(); buildTicker();
 }
 
 // ---- Manual CSV fallback ----
@@ -636,7 +636,6 @@ async function stopCamera(){
 // close modal on ✕ or backdrop tap
 function wireModalClose(){
   $("camClose").addEventListener("click", stopCamera);
-  $("camX").addEventListener("click", stopCamera);
   $("camModal").addEventListener("click", e=>{ if(e.target.id==="camModal") stopCamera(); });
 }
 
@@ -648,7 +647,7 @@ $("barcodeInput").addEventListener("input",e=>render(e.target.value));
 $("barcodeInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();render(e.target.value);e.target.select();} });
 $("academyPrice").addEventListener("blur",formatAcademy);
 $("academyPrice").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();e.target.blur();} });
-$("gramStd").addEventListener("change",()=>{persist();reRenderCurrent();});
+$("gramStd").addEventListener("change",()=>{persist();reRenderCurrent();buildTicker();});
 $("camBtn").addEventListener("click",toggleCamera);
 $("torchBtn").addEventListener("click",toggleTorch);
 $("wasteToggle").addEventListener("change",()=>{ persist(); reRenderCurrent(); });
@@ -658,11 +657,18 @@ $("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.
   ingestStock(rows); persist(); setStatus("ready",stockRows.length+" items · manual");
   markUpload("stock",stockRows.length); reRenderCurrent(); toast("Stock "+stockRows.length+" ခု တင်ပြီး"); }); });
 
+// tap the ticker to pause/resume (so it can actually be read)
+$("tickerWrap").addEventListener("click", ()=>{
+  $("tickerTrack").classList.toggle("paused");
+});
+
 // ---- Boot: seed purity from embed, show cache, refresh stock from repo ----
 purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
+buildTicker();
 if(restore()){
   setStatus("ready", stockRows.length+" items");
   markUpload("stock",stockRows.length); markUpload("purity",Object.keys(purityMap).length);
+  buildTicker();
 }
 loadFromRepo();
 $("barcodeInput").focus();
