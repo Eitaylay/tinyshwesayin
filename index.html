@@ -262,7 +262,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v5 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v6 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -571,7 +571,7 @@ async function loadFromRepo(){
     setStatus("ready", stockRows.length+" items");
     markUpload("stock",stockRows.length);
     reRenderCurrent();
-    toast("Stock အသစ် ရပါပြီ — "+stockRows.length+" items");
+    toast("Stock refreshed — "+stockRows.length+" items");
   }catch(e){
     // fallback to localStorage cache
     if(restore()){
