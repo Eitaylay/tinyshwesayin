@@ -262,7 +262,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v6 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v8 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -350,11 +350,16 @@ function gramEquiv(ws){ const w=norm(ws);
   if(w==="bahtthar") return 15.2; if(w==="gram") return 1; return gramStandard(); }
 
 // Purity price — mirrors RecalcPurityPrices VBA
+// PRICE_ROUND must match the VBA constant of the same name in Gold Config.
+// Purity price rounds UP (ceiling) to the nearest multiple of this.
+const PRICE_ROUND = 5000;
+
 function purityPrice(p){
   const academy=num($("academyPrice").value), gs=gramStandard();
   if(p.sync && academy>0 && gs>0){
     const pct = p.bu ? p.pu/p.bu : 0;
-    return Math.ceil(gramEquiv(p.ws)*pct/gs*academy/1000)*1000;
+    const raw = gramEquiv(p.ws)*pct/gs*academy;
+    return Math.ceil(raw/PRICE_ROUND)*PRICE_ROUND;
   }
   return p.price;
 }
@@ -380,15 +385,15 @@ function sortedPurityRows(){
   return rows;
 }
 
-// Purity names hidden from the scrolling ticker (still shown in the
-// tap-to-open price list). Add more names here to hide them too.
-const TICKER_HIDE = ["ဘတ်ထည်"];
+// Purity names hidden from BOTH the scrolling ticker and the
+// tap-to-open price list. Add more names here to hide them too.
+const HIDE_FROM_PRICES = ["ဘတ်ထည်"];
 
 function buildTicker(){
   const track = $("tickerTrack");
   if(!track || !PURITY_LIST.length) return;
 
-  const hide = TICKER_HIDE.map(norm);
+  const hide = HIDE_FROM_PRICES.map(norm);
   const rows = sortedPurityRows().filter(r => !hide.includes(norm(r.label)));
   const itemsHtml = rows.map(r =>
     `<span>${esc(r.label)} <b>${fmt(r.price)}</b></span><span class="sep">•</span>`
@@ -404,7 +409,8 @@ function buildPriceList(){
   const el = $("priceList");
   if(!el || !PURITY_LIST.length) return;
 
-  const rows = sortedPurityRows();
+  const hide = HIDE_FROM_PRICES.map(norm);
+  const rows = sortedPurityRows().filter(r => !hide.includes(norm(r.label)));
   let html = "", curWs = null;
   for(const r of rows){
     const wsKey = norm(r.ws);
