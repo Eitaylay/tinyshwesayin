@@ -28,7 +28,7 @@
     background:var(--ink); overflow:hidden; display:flex; align-items:center;
     box-shadow:0 2px 8px rgba(0,0,0,.15)}
   .ticker-track{display:flex; white-space:nowrap; will-change:transform;
-    animation:ticker-scroll 40s linear infinite; padding-left:100%}
+    animation:ticker-scroll 22s linear infinite}
   .ticker-track span{color:var(--ivory); font-size:12.5px; font-weight:600;
     letter-spacing:.3px; padding-right:14px; display:inline-flex; align-items:center; gap:6px}
   .ticker-track span b{color:#F0D98C; font-weight:700}
@@ -262,7 +262,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v3 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v5 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -380,11 +380,16 @@ function sortedPurityRows(){
   return rows;
 }
 
+// Purity names hidden from the scrolling ticker (still shown in the
+// tap-to-open price list). Add more names here to hide them too.
+const TICKER_HIDE = ["ဘတ်ထည်"];
+
 function buildTicker(){
   const track = $("tickerTrack");
   if(!track || !PURITY_LIST.length) return;
 
-  const rows = sortedPurityRows();
+  const hide = TICKER_HIDE.map(norm);
+  const rows = sortedPurityRows().filter(r => !hide.includes(norm(r.label)));
   const itemsHtml = rows.map(r =>
     `<span>${esc(r.label)} <b>${fmt(r.price)}</b></span><span class="sep">•</span>`
   ).join("");
