@@ -328,7 +328,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v13 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v14 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -887,13 +887,20 @@ function buildCart(){
 }
 
 function noteHistory(code, r){
-  if(!code) return;
-  const last = history[0];
-  if(last && last.code === code) return;          // don't spam while typing
+  // Only record barcodes that actually matched an item. While the user types
+  // a barcode, every keystroke fires a lookup ("RN", "RN26", ...) and those
+  // partial misses must not fill up the history.
+  if(!code || !r || r.status === "Not Found" || !r.item) return;
+
+  // Same barcode again (e.g. re-scanned, or re-rendered after a price change)
+  // moves to the top instead of adding a duplicate row.
+  const i = history.findIndex(h => h.code === code);
+  if(i >= 0) history.splice(i, 1);
+
   history.unshift({
     code,
     value: r.value !== undefined ? r.value : null,
-    desc: r.item ? (r.item.d||"") : "",
+    desc: r.item.d || "",
     status: r.status,
     ts: Date.now(),
   });
