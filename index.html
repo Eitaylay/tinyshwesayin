@@ -79,6 +79,12 @@
   .drow span{color:var(--muted)}
   .drow b{color:var(--ink); font-weight:600}
   .drow b .g{color:var(--muted); font-weight:400; font-size:11.5px}
+  .w-edit{display:flex; align-items:center; gap:3px}
+  .w-in{width:42px; text-align:center; font-size:13px; font-weight:700; color:var(--gold);
+    border:1px solid var(--line); border-radius:7px; background:var(--paper);
+    padding:3px 2px; outline:none}
+  .w-in:focus{border-color:var(--gold)}
+  .w-edit i{font-style:normal; font-size:10.5px; color:var(--muted); margin-right:4px}
   .badge.instock{background:var(--ok-bg); color:var(--ok)}
   .badge.sold,.badge.notfound{background:var(--danger-bg); color:var(--danger)}
   .price-anim{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
@@ -311,8 +317,8 @@
       </div>
       <label class="toggle-row">
         <div class="tl">
-          <div class="t">ရောင်းအလျော့ တွက်ချက်ခြင်း</div>
-          <div class="s">ဖွင့်ရင် Sell Wastage K/P/Y ကို တန်ဖိုးထဲ ထည့်တွက်မယ်</div>
+          <div class="t">ရောင်းအလျော့ ပြင်ခွင့်</div>
+          <div class="s">ဖွင့်ရင် item card ပေါ်က K/P/Y ကို ပြင်ရိုက်ပြီး ဈေးပြန်တွက်လို့ရမယ်</div>
         </div>
         <input type="checkbox" id="wasteToggle" checked>
         <span class="switch"></span>
@@ -328,7 +334,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v14 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v15 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -426,6 +432,15 @@ function pick(row, cands){
 
 function gramStandard(){ return parseFloat($("gramStd").value)||16.6; }
 function wasteEnabled(){ const el=$("wasteToggle"); return el ? el.checked : true; }
+
+// Per-barcode sell-wastage override. Cleared automatically when a different
+// barcode is displayed, so an edit never leaks onto the next item.
+let wasteEdit = {code:null, k:0, p:0, y:0};
+function currentWaste(row, code){
+  if(wasteEdit.code === code) return {k:wasteEdit.k, p:wasteEdit.p, y:wasteEdit.y};
+  return {k:row.wk, p:row.wp, y:row.wy};
+}
+function isWasteEdited(code){ return wasteEdit.code === code; }
 
 // grams -> {k,p,y}   (yway = g/gramStandard*128; 1K=128Y, 1P=8Y)
 function gramsToKPY(g){
@@ -551,11 +566,12 @@ function lookup(barcode){
   const p=purityMap[norm(row.p)];
   const perK=p?purityPrice(p):0;
 
-  // Sell wastage only counts when the toggle is on (default on)
-  const useWaste = wasteEnabled();
+  // Sell wastage always counts (as in the Excel formula). If the user has
+  // edited it for this barcode, the edited K/P/Y is used instead.
+  const w = currentWaste(row, code);
   const itemYway=(row.w/gs)*128;
   const gemYway=row.gk*128+row.gp*8+row.gy;
-  const sellYway=useWaste ? (row.wk*128+row.wp*8+row.wy) : 0;
+  const sellYway=w.k*128+w.p*8+w.y;
   const raw=((itemYway-gemYway+sellYway)*(perK/128))+row.gc+row.lc;
   const value=Math.ceil(raw/1000)*1000;   // ROUNDUP(...,-3)
   return {status:row.s||"In Stock", value, item:row};
@@ -580,7 +596,18 @@ function render(barcode){
     const perK=p?purityPrice(p):0;
     const wt=gramsToKPY(it.w);
     const hasGem=(it.gk||it.gp||it.gy);
-    const hasWaste=(it.wk||it.wp||it.wy) && wasteEnabled();
+    const w = currentWaste(it, code);
+    const canEditWaste = wasteEnabled();
+    const wasteRow = canEditWaste
+      ? `<div class="drow"><span>ရောင်းအလျော့</span>
+           <b class="w-edit">
+             <input class="w-in" id="wK" inputmode="decimal" value="${w.k}"><i>ကျပ်</i>
+             <input class="w-in" id="wP" inputmode="decimal" value="${w.p}"><i>ပဲ</i>
+             <input class="w-in" id="wY" inputmode="decimal" value="${w.y}"><i>ရွေး</i>
+           </b></div>`
+      : ((w.k||w.p||w.y)
+          ? `<div class="drow"><span>ရောင်းအလျော့</span><b>${kpyStr(w.k,w.p,w.y)}</b></div>`
+          : "");
     const hasLen=it.ln && it.ln!=="-" && it.ln!=="";
     res.innerHTML=`<div class="code">${code}</div>
       <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
@@ -590,7 +617,7 @@ function render(barcode){
       <div class="details">
         <div class="drow"><span>အလေးချိန်</span><b>${kpyStr(wt.k,wt.p,wt.y)} <span class="g">(${it.w} g)</span></b></div>
         ${hasGem?`<div class="drow"><span>ကျောက်ချိန်</span><b>${kpyStr(it.gk,it.gp,it.gy)}</b></div>`:""}
-        ${hasWaste?`<div class="drow"><span>ရောင်းအလျော့</span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
+        ${wasteRow}
         ${hasLen?`<div class="drow"><span>အလျား (Length)</span><b>${esc(it.ln)}</b></div>`:""}
         ${it.gc?`<div class="drow"><span>ကျောက်ဖိုး</span><b>${fmt(it.gc)} Ks</b></div>`:""}
         ${it.lc?`<div class="drow"><span>လက်ခ</span><b>${fmt(it.lc)} Ks</b></div>`:""}
@@ -608,8 +635,30 @@ function render(barcode){
   }
 
   lastResult = (r.value!==undefined) ? {code, value:r.value, item:r.item, status:r.status} : null;
+  wireWasteInputs(code);
   updateAddBtn();
   noteHistory(code, r);
+}
+
+// Live-edit sell wastage: recompute the price in place without rebuilding the
+// card (which would steal focus from the input being typed into).
+function wireWasteInputs(code){
+  const ins = ["wK","wP","wY"].map(id => $(id));
+  if(ins.some(x => !x)) return;
+  const onEdit = () => {
+    wasteEdit = {
+      code,
+      k: parseFloat(ins[0].value) || 0,
+      p: parseFloat(ins[1].value) || 0,
+      y: parseFloat(ins[2].value) || 0,
+    };
+    const r = lookup(code);
+    if(!r || r.value === undefined) return;
+    const priceEl = document.querySelector("#displayResult .price");
+    if(priceEl) priceEl.innerHTML = fmt(r.value) + '<span class="ks">Ks</span>';
+    if(lastResult) lastResult.value = r.value;   // cart uses the edited value
+  };
+  ins.forEach(i => i.addEventListener("input", onEdit));
 }
 
 // ---- Build compact rows + index from parsed CSV ----
@@ -1034,7 +1083,10 @@ $("thbAuto").addEventListener("change", ()=>{
 $("thbPrice").addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); e.target.blur();} });
 $("camBtn").addEventListener("click",toggleCamera);
 $("torchBtn").addEventListener("click",toggleTorch);
-$("wasteToggle").addEventListener("change",()=>{ persist(); reRenderCurrent(); });
+$("wasteToggle").addEventListener("change",()=>{
+  if(!wasteEnabled()) wasteEdit = {code:null,k:0,p:0,y:0};   // drop edits when locked
+  persist(); reRenderCurrent();
+});
 $("refreshBtn").addEventListener("click",loadFromRepo);
 $("addBtn").addEventListener("click",addToCart);
 $("cartBtn").addEventListener("click",openCart);
