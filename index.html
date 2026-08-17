@@ -189,6 +189,23 @@
   .gstd{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
   .gstd select{flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
     background:var(--paper); font-size:14px; color:var(--ink); font-weight:600; outline:none}
+  .thb-row{border:1px solid var(--line); border-radius:12px; padding:11px 13px}
+  .thb-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:5px}
+  .thb-top label{font-size:12.5px; font-weight:600; color:var(--ink)}
+  .thb-top a{font-size:11px; color:var(--gold); text-decoration:none; font-weight:600}
+  .thb-in{display:flex; align-items:baseline; gap:8px}
+  .thb-in input{flex:1; min-width:0; border:none; background:transparent; outline:none;
+    font-family:Georgia,serif; font-size:24px; font-weight:700; color:var(--gold);
+    border-bottom:1.5px dashed var(--line); padding:2px 0}
+  .thb-in input:focus{border-bottom-color:var(--gold)}
+  .thb-in span{font-size:11px; color:var(--muted); font-weight:600; flex:0 0 auto}
+  .thb-note{font-size:11px; color:var(--muted); margin-top:5px}
+  .thb-bottom{display:flex; align-items:center; justify-content:space-between; margin-top:8px}
+  .thb-auto{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink);
+    font-weight:600; cursor:pointer}
+  .thb-auto input{width:15px; height:15px; accent-color:var(--gold)}
+  .thb-sync{padding:6px 12px; border-radius:16px; border:1px solid var(--line);
+    background:var(--paper); color:var(--gold); font-size:11.5px; font-weight:700; cursor:pointer}
   .toggle-row{display:flex; align-items:center; gap:12px; cursor:pointer}
   .toggle-row .tl{flex:1}
   .toggle-row .t{font-size:13px; font-weight:600; color:var(--ink)}
@@ -267,6 +284,24 @@
         repo ထဲက <b>regularstockentry.csv</b> ကို replace ပြီး ဒီ app မှာ 🔄 refresh နှိပ်ရုံ။
         (Purity က app ထဲ built-in ဖြစ်လို့ CSV မလိုတော့ပါ။)
       </div>
+      <div class="thb-row">
+        <div class="thb-top">
+          <label for="thbPrice">ဘတ်ရွှေဈေး (BS / BPK)</label>
+          <a href="https://www.namchiang.com/" target="_blank" rel="noopener">namchiang ↗</a>
+        </div>
+        <div class="thb-in">
+          <input id="thbPrice" type="text" inputmode="numeric" value="68,800">
+          <span>THB / ဘတ်သား</span>
+        </div>
+        <div class="thb-bottom">
+          <label class="thb-auto">
+            <input type="checkbox" id="thbAuto" checked>
+            <span>Auto (10 မိနစ်)</span>
+          </label>
+          <button class="thb-sync" id="thbSync">↻ ခုဆွဲ</button>
+        </div>
+        <div class="thb-note" id="thbStamp">Auto ပိတ်ရင် ကိုယ်တိုင် ရိုက်ထည့်ပါ</div>
+      </div>
       <div class="gstd">
         <span>၁ကျပ်သား ဂရမ်:</span>
         <select id="gramStd">
@@ -293,7 +328,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v11 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v13 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -359,12 +394,12 @@ const CSV_STOCK   = "regularstockentry.csv";
 const CSV_ACADEMY = "academyprice.csv";   // optional: single value, synced from Excel
 
 // Purity is embedded (rarely changes). To update: edit these values.
-const PURITY_EMBED = {"မီးလင်း":{"price":10000000,"pu":16,"bu":16,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":9415000,"pu":16,"bu":17,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်b":{"price":9145000,"pu":16,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8890000,"pu":16,"bu":18,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7500000,"pu":12,"bu":16,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false},"ဘတ်pk":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false},"ဘတ်ထည်":{"price":9650000,"pu":96.5,"bu":100,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000,"pu":75,"bu":100,"ws":"Gram","sync":false},"18k-b":{"price":580000,"pu":75,"bu":100,"ws":"Gram","sync":false},"24k":{"price":700000,"pu":100,"bu":100,"ws":"Gram","sync":false}};
+const PURITY_EMBED = {"မီးလင်း":{"price":10000000,"pu":16,"bu":16,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":9415000,"pu":16,"bu":17,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်b":{"price":9145000,"pu":16,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8890000,"pu":16,"bu":18,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7500000,"pu":12,"bu":16,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်pk":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်ထည်":{"price":9650000,"pu":96.5,"bu":100,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000,"pu":75,"bu":100,"ws":"Gram","sync":false},"18k-b":{"price":580000,"pu":75,"bu":100,"ws":"Gram","sync":false},"24k":{"price":700000,"pu":100,"bu":100,"ws":"Gram","sync":false}};
 
 let stockRows = [];   // [{b,s,d,c,p,w,gk,gp,gy,wk,wp,wy,gc,lc}]
 // Original-name list (for display, e.g. ticker) - PURITY_EMBED keys are
 // normalised/lowercased and unsuitable for showing to the user.
-const PURITY_LIST = [{"n":"မီးလင်း","pu":16,"bu":16,"ws":"Kyatthar","sync":true,"price":10000000},{"n":"၁၅ပဲရည်","pu":16,"bu":17,"ws":"Kyatthar","sync":true,"price":9415000},{"n":"၁၅ပဲရည် B","pu":16,"bu":17.5,"ws":"Kyatthar","sync":true,"price":9145000},{"n":"၁၄ပဲရည်","pu":16,"bu":18,"ws":"Kyatthar","sync":true,"price":8890000},{"n":"၁၂ပဲရည်","pu":12,"bu":16,"ws":"Kyatthar","sync":true,"price":7500000},{"n":"ဘတ် Second","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800},{"n":"ဘတ် PK","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800},{"n":"ဘတ်ထည်","pu":96.5,"bu":100,"ws":"Kyatthar","sync":true,"price":9650000},{"n":"18K-S","pu":75,"bu":100,"ws":"Gram","sync":false,"price":590000},{"n":"18K-B","pu":75,"bu":100,"ws":"Gram","sync":false,"price":580000},{"n":"24K","pu":100,"bu":100,"ws":"Gram","sync":false,"price":700000}];
+const PURITY_LIST = [{"n":"မီးလင်း","pu":16,"bu":16,"ws":"Kyatthar","sync":true,"price":10000000},{"n":"၁၅ပဲရည်","pu":16,"bu":17,"ws":"Kyatthar","sync":true,"price":9415000},{"n":"၁၅ပဲရည် B","pu":16,"bu":17.5,"ws":"Kyatthar","sync":true,"price":9145000},{"n":"၁၄ပဲရည်","pu":16,"bu":18,"ws":"Kyatthar","sync":true,"price":8890000},{"n":"၁၂ပဲရည်","pu":12,"bu":16,"ws":"Kyatthar","sync":true,"price":7500000},{"n":"ဘတ် Second","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ် PK","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ်ထည်","pu":96.5,"bu":100,"ws":"Kyatthar","sync":true,"price":9650000},{"n":"18K-S","pu":75,"bu":100,"ws":"Gram","sync":false,"price":590000},{"n":"18K-B","pu":75,"bu":100,"ws":"Gram","sync":false,"price":580000},{"n":"24K","pu":100,"bu":100,"ws":"Gram","sync":false,"price":700000}];
 
 let purityMap = {};   // norm(name) -> {price,pu,bu,ws,sync}  (seeded from PURITY_EMBED)
 let stockIndex = {};  // upper(barcode) -> row  (fast lookup for 3k+ items)
@@ -417,6 +452,12 @@ function gramEquiv(ws){ const w=norm(ws);
 const PRICE_ROUND = 5000;
 
 function purityPrice(p){
+  // Thai-baht purities (BS / BPK) read their price from the THB field,
+  // which the user updates by hand from namchiang.com.
+  if(p.thb){
+    const v = num($("thbPrice") ? $("thbPrice").value : 0);
+    if(v > 0) return v;
+  }
   const academy=num($("academyPrice").value), gs=gramStandard();
   if(p.sync && academy>0 && gs>0){
     const pct = p.bu ? p.pu/p.bu : 0;
@@ -641,6 +682,7 @@ async function loadFromRepo(){
   $("refreshBtn").classList.add("spin");
   try{
     await fetchAcademy();               // sync price from repo if available
+    fetchThbPrice(false);               // Thai baht price (non-blocking)
     const stk = await fetchCsv(CSV_STOCK);
     ingestStock(stk);
     persist();
@@ -678,7 +720,8 @@ function markUpload(which,count){
 function persist(){
   try{ localStorage.setItem(LS_KEY,JSON.stringify({
     stockRows, purityMap, academy:$("academyPrice").value, gramStd:$("gramStd").value,
-    waste: wasteEnabled(), cart, history
+    waste: wasteEnabled(), cart, history, thb: $("thbPrice").value,
+    thbAuto: thbAutoOn()
   })); }catch(e){}
 }
 function restore(){
@@ -690,6 +733,8 @@ function restore(){
         if(d.gramStd)$("gramStd").value=d.gramStd;
         if(Array.isArray(d.cart)) cart = d.cart;
         if(Array.isArray(d.history)) history = d.history;
+        if(d.thb) $("thbPrice").value = d.thb;
+        if(typeof d.thbAuto==="boolean") $("thbAuto").checked = d.thbAuto;
         updateCartCount();
       }
       return false;
@@ -700,6 +745,8 @@ function restore(){
     if(typeof d.waste==="boolean"){ const w=$("wasteToggle"); if(w) w.checked=d.waste; applyWasteLock(); }
     if(Array.isArray(d.cart)) cart = d.cart;
     if(Array.isArray(d.history)) history = d.history;
+    if(d.thb) $("thbPrice").value = d.thb;
+    if(typeof d.thbAuto==="boolean") $("thbAuto").checked = d.thbAuto;
     updateCartCount();
     return true;
   }catch(e){ return false; }
@@ -717,6 +764,58 @@ function formatAcademy(){
 function parseFile(file,cb){
   Papa.parse(file,{header:true,skipEmptyLines:true,complete:o=>cb(o.data),
     error:()=>toast("CSV ဖတ်မရပါ")});
+}
+
+// ---- Thai gold price auto-fetch (namchiang.com) ----
+// The browser cannot fetch namchiang directly (CORS), so we go through a
+// public read-only proxy. huasengheng cannot be used: its price table is
+// filled in by JavaScript, so the HTML we would receive is empty.
+const THB_PROXY = "https://api.allorigins.win/raw?url=";
+const THB_SRC   = "https://www.namchiang.com/";
+const THB_EVERY = 10 * 60 * 1000;   // 10 minutes
+let thbTimer = null;
+
+function thbAutoOn(){ const t=$("thbAuto"); return t ? t.checked : false; }
+
+async function fetchThbPrice(manual){
+  if(!thbAutoOn()) return false;
+  const note = $("thbStamp");
+  if(note) note.textContent = "checking…";
+  try{
+    const url = THB_PROXY + encodeURIComponent(THB_SRC + "?t=" + Date.now());
+    const resp = await fetch(url, {cache:"no-store"});
+    if(!resp.ok) throw new Error(resp.status);
+    const txt = await resp.text();
+
+    const doc = new DOMParser().parseFromString(txt, "text/html");
+    let sell = 0, when = "";
+    for(const tr of doc.querySelectorAll("tr")){
+      const tds = [...tr.querySelectorAll("td")].map(td => td.textContent.trim());
+      if(tds.length < 4) continue;
+      // find the cell holding a yyyy-mm-dd hh:mm:ss stamp
+      const di = tds.findIndex(t => /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(t));
+      if(di < 0) continue;
+      const sellRaw = (tds[di+2]||"").replace(/[^\d.]/g,"");   // ราคาขาย
+      const v = parseFloat(sellRaw);
+      if(v >= 10000 && v <= 500000){ sell = v; when = tds[di]; break; }
+    }
+    if(!sell) throw new Error("no price found");
+
+    $("thbPrice").value = sell.toLocaleString("en-US");
+    if(note) note.textContent = "namchiang ขายออก · " + when.replace(/^\d{4}-/,"");
+    persist(); reRenderCurrent(); buildTicker();
+    if(manual) toast("ဘတ်ဈေး update — " + fmt(sell) + " THB");
+    return true;
+  }catch(e){
+    if(note) note.textContent = "auto မရ — ကိုယ်တိုင် ရိုက်ထည့်ပါ";
+    if(manual) toast("ဘတ်ဈေး auto မရပါ — manual ရိုက်ပါ");
+    return false;
+  }
+}
+
+function startThbTimer(){
+  if(thbTimer) clearInterval(thbTimer);
+  if(thbAutoOn()) thbTimer = setInterval(()=>fetchThbPrice(false), THB_EVERY);
 }
 
 // ---- Cart & history ----
@@ -913,6 +1012,19 @@ $("barcodeInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventD
 $("academyPrice").addEventListener("blur",formatAcademy);
 $("academyPrice").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();e.target.blur();} });
 $("gramStd").addEventListener("change",()=>{persist();reRenderCurrent();buildTicker();});
+function formatThb(){
+  const el=$("thbPrice"), n=num(el.value);
+  el.value = n ? n.toLocaleString("en-US") : "";
+  persist(); reRenderCurrent(); buildTicker();
+}
+$("thbPrice").addEventListener("blur", formatThb);
+$("thbSync").addEventListener("click", ()=>fetchThbPrice(true));
+$("thbAuto").addEventListener("change", ()=>{
+  persist(); startThbTimer();
+  if(thbAutoOn()) fetchThbPrice(true);
+  else $("thbStamp").textContent = "Auto ပိတ်ထား — ကိုယ်တိုင် ရိုက်ထည့်ပါ";
+});
+$("thbPrice").addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); e.target.blur();} });
 $("camBtn").addEventListener("click",toggleCamera);
 $("torchBtn").addEventListener("click",toggleTorch);
 $("wasteToggle").addEventListener("change",()=>{ persist(); reRenderCurrent(); });
@@ -938,6 +1050,7 @@ $("tickerWrap").addEventListener("click", openPriceList);
 purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
 buildTicker();
 updateCartCount();
+startThbTimer();
 if(restore()){
   setStatus("ready", stockRows.length+" items");
   markUpload("stock",stockRows.length); markUpload("purity",Object.keys(purityMap).length);
