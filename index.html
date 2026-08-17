@@ -130,6 +130,29 @@
   .pl-sub{font-size:11px; color:var(--muted); margin-top:1px}
   .pl-price{font-family:Georgia,serif; font-size:17px; font-weight:700; color:var(--gold);
     white-space:nowrap; padding-left:12px}
+
+  /* Cart / history */
+  .cart-btn{position:relative}
+  .cart-count{position:absolute; top:-5px; right:-5px; min-width:17px; height:17px;
+    border-radius:9px; background:var(--gold); color:#fff; font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; padding:0 4px}
+  .cart-count.zero{display:none}
+  .add-btn{position:absolute; top:12px; right:12px; z-index:2;
+    padding:7px 14px; border-radius:18px; border:none; background:var(--gold); color:#fff;
+    font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 2px 6px rgba(154,123,28,.3)}
+  .add-btn:active{transform:scale(.94)}
+  .add-btn.added{background:var(--ok)}
+  .cart-foot{border-top:1px solid var(--line); padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .cart-total{display:flex; align-items:baseline; gap:10px; font-size:13px; color:var(--muted)}
+  .cart-total b{font-family:Georgia,serif; font-size:22px; color:var(--gold); font-weight:700}
+  .cart-clear{padding:8px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--paper); color:var(--danger); font-size:12.5px; font-weight:600; cursor:pointer}
+  .pl-empty{text-align:center; color:var(--muted); font-size:13px; padding:26px 0}
+  .pl-del{border:none; background:transparent; color:var(--danger); font-size:16px;
+    cursor:pointer; padding:4px 6px; margin-left:6px}
+  .pl-time{font-size:10.5px; color:var(--muted); margin-top:2px}
+  .pl-row.tap{cursor:pointer}
   .torch{padding:9px 20px; border-radius:20px; border:1px solid var(--line);
     background:var(--paper); color:var(--ink); font-size:13px; font-weight:600; cursor:pointer}
   .torch.on{background:var(--gold); color:#fff; border-color:var(--gold)}
@@ -203,6 +226,13 @@
     </div>
     <div class="head-right">
       <div class="status-dot" id="statusDot"><i></i><span id="statusText">Loading…</span></div>
+      <button class="refresh" id="histBtn" title="History">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      </button>
+      <button class="refresh cart-btn" id="cartBtn" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6L5 3H2"/></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
       <button class="refresh" id="refreshBtn" title="Data အသစ်ဆွဲရန်">
         <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.5 9a9 9 0 00-14.9-3.4L1 10m22 4l-4.6 4.4A9 9 0 013.5 15"/></svg>
       </button>
@@ -210,6 +240,7 @@
   </div>
 
   <div class="display" id="display">
+    <button class="add-btn" id="addBtn" style="display:none">+ Add</button>
     <div class="hint" id="displayHint">Barcode ကို scan (သို့) ရိုက်ထည့်ပြီး<br>ဈေးကို ချက်ချင်း ကြည့်ပါ</div>
     <div id="displayResult" style="display:none"></div>
   </div>
@@ -262,7 +293,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v8 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v11 · ticker tap = ဈေးစာရင်း</span>
   </div>
 </div>
 
@@ -291,6 +322,33 @@
   </div>
 </div>
 
+<div class="cam-modal" id="cartModal">
+  <div class="cam-sheet price-sheet">
+    <div class="cam-head">
+      <span>Cart</span>
+      <button class="cam-close" id="cartClose">✕</button>
+    </div>
+    <div class="price-list" id="cartList"></div>
+    <div class="cart-foot">
+      <div class="cart-total"><span>စုစုပေါင်း</span><b id="cartTotal">0 Ks</b></div>
+      <button class="cart-clear" id="cartClear">Clear all</button>
+    </div>
+  </div>
+</div>
+
+<div class="cam-modal" id="histModal">
+  <div class="cam-sheet price-sheet">
+    <div class="cam-head">
+      <span>Scan History</span>
+      <button class="cam-close" id="histClose">✕</button>
+    </div>
+    <div class="price-list" id="histList"></div>
+    <div class="cart-foot">
+      <button class="cart-clear" id="histClear">Clear history</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -301,15 +359,19 @@ const CSV_STOCK   = "regularstockentry.csv";
 const CSV_ACADEMY = "academyprice.csv";   // optional: single value, synced from Excel
 
 // Purity is embedded (rarely changes). To update: edit these values.
-const PURITY_EMBED = {"မီးလင်း":{"price":9560000.0,"pu":16.0,"bu":16.0,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":8998000.0,"pu":16.0,"bu":17.0,"ws":"Kyatthar","sync":true},"၁၄ပဲ၂ပြား":{"price":8741000.0,"pu":16.0,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8498000.0,"pu":16.0,"bu":18.0,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7170000.0,"pu":12.0,"bu":16.0,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":8448000.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":true},"ဘတ်pk":{"price":64050.0,"pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":false},"ဘတ်ထည်":{"price":46221.852349537,"pu":96.5,"bu":100.0,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"18k-b":{"price":580000.0,"pu":75.0,"bu":100.0,"ws":"Gram","sync":false},"24k":{"price":700000.0,"pu":100.0,"bu":100.0,"ws":"Gram","sync":false}};
+const PURITY_EMBED = {"မီးလင်း":{"price":10000000,"pu":16,"bu":16,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":9415000,"pu":16,"bu":17,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်b":{"price":9145000,"pu":16,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8890000,"pu":16,"bu":18,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7500000,"pu":12,"bu":16,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false},"ဘတ်pk":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false},"ဘတ်ထည်":{"price":9650000,"pu":96.5,"bu":100,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000,"pu":75,"bu":100,"ws":"Gram","sync":false},"18k-b":{"price":580000,"pu":75,"bu":100,"ws":"Gram","sync":false},"24k":{"price":700000,"pu":100,"bu":100,"ws":"Gram","sync":false}};
 
 let stockRows = [];   // [{b,s,d,c,p,w,gk,gp,gy,wk,wp,wy,gc,lc}]
 // Original-name list (for display, e.g. ticker) - PURITY_EMBED keys are
 // normalised/lowercased and unsuitable for showing to the user.
-const PURITY_LIST = [{"n":"မီးလင်း","pu":16.0,"bu":16.0,"ws":"Kyatthar","sync":true,"price":9560000.0},{"n":"၁၅ပဲရည်","pu":16.0,"bu":17.0,"ws":"Kyatthar","sync":true,"price":8998000.0},{"n":"၁၄ပဲ ၂ပြား","pu":16.0,"bu":17.5,"ws":"Kyatthar","sync":true,"price":8741000.0},{"n":"၁၄ပဲရည်","pu":16.0,"bu":18.0,"ws":"Kyatthar","sync":true,"price":8498000.0},{"n":"၁၂ပဲရည်","pu":12.0,"bu":16.0,"ws":"Kyatthar","sync":true,"price":7170000.0},{"n":"ဘတ် Second","pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":true,"price":8448000.0},{"n":"ဘတ် PK","pu":96.5,"bu":100.0,"ws":"Bahtthar","sync":false,"price":64050.0},{"n":"ဘတ်ထည်","pu":96.5,"bu":100.0,"ws":"Kyatthar","sync":true,"price":46221.852349537},{"n":"18K-S","pu":75.0,"bu":100.0,"ws":"Gram","sync":false,"price":590000.0},{"n":"18K-B","pu":75.0,"bu":100.0,"ws":"Gram","sync":false,"price":580000.0},{"n":"24K","pu":100.0,"bu":100.0,"ws":"Gram","sync":false,"price":700000.0}];
+const PURITY_LIST = [{"n":"မီးလင်း","pu":16,"bu":16,"ws":"Kyatthar","sync":true,"price":10000000},{"n":"၁၅ပဲရည်","pu":16,"bu":17,"ws":"Kyatthar","sync":true,"price":9415000},{"n":"၁၅ပဲရည် B","pu":16,"bu":17.5,"ws":"Kyatthar","sync":true,"price":9145000},{"n":"၁၄ပဲရည်","pu":16,"bu":18,"ws":"Kyatthar","sync":true,"price":8890000},{"n":"၁၂ပဲရည်","pu":12,"bu":16,"ws":"Kyatthar","sync":true,"price":7500000},{"n":"ဘတ် Second","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800},{"n":"ဘတ် PK","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800},{"n":"ဘတ်ထည်","pu":96.5,"bu":100,"ws":"Kyatthar","sync":true,"price":9650000},{"n":"18K-S","pu":75,"bu":100,"ws":"Gram","sync":false,"price":590000},{"n":"18K-B","pu":75,"bu":100,"ws":"Gram","sync":false,"price":580000},{"n":"24K","pu":100,"bu":100,"ws":"Gram","sync":false,"price":700000}];
 
 let purityMap = {};   // norm(name) -> {price,pu,bu,ws,sync}  (seeded from PURITY_EMBED)
 let stockIndex = {};  // upper(barcode) -> row  (fast lookup for 3k+ items)
+let cart = [];        // [{code, value, desc, purity, ts}]
+let history = [];     // [{code, value, desc, status, ts}]  newest first, capped
+let lastResult = null;// the currently displayed item (null if none/unpriced)
+const HIST_MAX = 60;
 const LS_KEY = "shwe_price_v2";
 
 const $ = id => document.getElementById(id);
@@ -468,23 +530,27 @@ function render(barcode){
   hint.style.display="none"; res.style.display="block";
   const code=(barcode||"").trim().toUpperCase();
 
-  if(r.status==="In Stock"){
-    disp.classList.add("instock");
+  if(!r.sold && r.status!=="Not Found"){
+    // In Stock OR Inactive (anything not Sold) -> show value + details
+    const inStock = (r.status||"").toLowerCase()==="in stock";
+    disp.classList.add(inStock ? "instock" : "notfound");
     const it=r.item;
     const p=purityMap[norm(it.p)];
     const perK=p?purityPrice(p):0;
     const wt=gramsToKPY(it.w);
     const hasGem=(it.gk||it.gp||it.gy);
-    const hasWaste=(it.wk||it.wp||it.wy);
+    const hasWaste=(it.wk||it.wp||it.wy) && wasteEnabled();
+    const hasLen=it.ln && it.ln!=="-" && it.ln!=="";
     res.innerHTML=`<div class="code">${code}</div>
       <div class="price price-anim">${fmt(r.value)}<span class="ks">Ks</span></div>
       ${it.d?`<div class="desc">${esc(it.d)}</div>`:""}
       <div class="meta">${it.c?esc(it.c)+" · ":""}${esc(it.p||"")}${perK?" · "+fmt(perK)+" Ks/ကျပ်သား":""}</div>
-      <div class="badge instock">In Stock</div>
+      <div class="badge ${inStock?"instock":"notfound"}">${esc(r.status)}</div>
       <div class="details">
         <div class="drow"><span>အလေးချိန်</span><b>${kpyStr(wt.k,wt.p,wt.y)} <span class="g">(${it.w} g)</span></b></div>
         ${hasGem?`<div class="drow"><span>ကျောက်ချိန်</span><b>${kpyStr(it.gk,it.gp,it.gy)}</b></div>`:""}
         ${hasWaste?`<div class="drow"><span>ရောင်းအလျော့</span><b>${kpyStr(it.wk,it.wp,it.wy)}</b></div>`:""}
+        ${hasLen?`<div class="drow"><span>အလျား (Length)</span><b>${esc(it.ln)}</b></div>`:""}
         ${it.gc?`<div class="drow"><span>ကျောက်ဖိုး</span><b>${fmt(it.gc)} Ks</b></div>`:""}
         ${it.lc?`<div class="drow"><span>လက်ခ</span><b>${fmt(it.lc)} Ks</b></div>`:""}
       </div>`;
@@ -499,6 +565,10 @@ function render(barcode){
       ${r.item.d?`<div class="desc" style="margin-top:8px">${esc(r.item.d)}</div>`:""}
       <div class="badge sold" style="margin-top:10px">${esc(r.status)}</div>`;
   }
+
+  lastResult = (r.value!==undefined) ? {code, value:r.value, item:r.item, status:r.status} : null;
+  updateAddBtn();
+  noteHistory(code, r);
 }
 
 // ---- Build compact rows + index from parsed CSV ----
@@ -608,20 +678,29 @@ function markUpload(which,count){
 function persist(){
   try{ localStorage.setItem(LS_KEY,JSON.stringify({
     stockRows, purityMap, academy:$("academyPrice").value, gramStd:$("gramStd").value,
-    waste: wasteEnabled()
+    waste: wasteEnabled(), cart, history
   })); }catch(e){}
 }
 function restore(){
   try{
     const d=JSON.parse(localStorage.getItem(LS_KEY)||"null");
     if(!d||!d.stockRows||!d.stockRows.length) {
-      if(d){ if(d.academy)$("academyPrice").value=d.academy; if(d.gramStd)$("gramStd").value=d.gramStd; }
+      if(d){
+        if(d.academy)$("academyPrice").value=d.academy;
+        if(d.gramStd)$("gramStd").value=d.gramStd;
+        if(Array.isArray(d.cart)) cart = d.cart;
+        if(Array.isArray(d.history)) history = d.history;
+        updateCartCount();
+      }
       return false;
     }
     stockRows=d.stockRows; purityMap=PURITY_EMBED; reindex();
     if(d.academy)$("academyPrice").value=d.academy;
     if(d.gramStd)$("gramStd").value=d.gramStd;
     if(typeof d.waste==="boolean"){ const w=$("wasteToggle"); if(w) w.checked=d.waste; applyWasteLock(); }
+    if(Array.isArray(d.cart)) cart = d.cart;
+    if(Array.isArray(d.history)) history = d.history;
+    updateCartCount();
     return true;
   }catch(e){ return false; }
 }
@@ -639,6 +718,115 @@ function parseFile(file,cb){
   Papa.parse(file,{header:true,skipEmptyLines:true,complete:o=>cb(o.data),
     error:()=>toast("CSV ဖတ်မရပါ")});
 }
+
+// ---- Cart & history ----
+const nowStr = ts => {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,"0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+function updateAddBtn(){
+  const b = $("addBtn");
+  if(!b) return;
+  if(!lastResult){ b.style.display="none"; return; }
+  b.style.display="block";
+  const inCart = cart.some(c => c.code === lastResult.code);
+  b.classList.toggle("added", inCart);
+  b.textContent = inCart ? "✓ Added" : "+ Add";
+}
+
+function addToCart(){
+  if(!lastResult) return;
+  if(cart.some(c => c.code === lastResult.code)){
+    toast("Already in cart");
+    return;
+  }
+  cart.push({
+    code: lastResult.code,
+    value: lastResult.value,
+    desc: lastResult.item.d || "",
+    purity: lastResult.item.p || "",
+    ts: Date.now(),
+  });
+  persist(); updateCartCount(); updateAddBtn();
+  toast("Added — cart total " + fmt(cartTotal()) + " Ks");
+}
+
+function cartTotal(){ return cart.reduce((s,c)=>s+(c.value||0),0); }
+
+function updateCartCount(){
+  const el = $("cartCount");
+  if(!el) return;
+  el.textContent = cart.length;
+  el.classList.toggle("zero", cart.length===0);
+}
+
+function removeFromCart(code){
+  cart = cart.filter(c => c.code !== code);
+  persist(); updateCartCount(); updateAddBtn(); buildCart();
+}
+
+function buildCart(){
+  const el = $("cartList");
+  if(!el) return;
+  if(!cart.length){
+    el.innerHTML = `<div class="pl-empty">Cart ထဲ ဘာမှ မရှိသေးပါ</div>`;
+  } else {
+    el.innerHTML = cart.map(c => `<div class="pl-row">
+      <div><div class="pl-name">${esc(c.code)}</div>
+        <div class="pl-sub">${esc(c.desc||c.purity||"")}</div></div>
+      <div style="display:flex;align-items:center">
+        <div class="pl-price">${fmt(c.value)} Ks</div>
+        <button class="pl-del" data-code="${esc(c.code)}">✕</button>
+      </div>
+    </div>`).join("");
+    el.querySelectorAll(".pl-del").forEach(b =>
+      b.addEventListener("click", ()=>removeFromCart(b.dataset.code)));
+  }
+  $("cartTotal").textContent = fmt(cartTotal()) + " Ks";
+}
+
+function noteHistory(code, r){
+  if(!code) return;
+  const last = history[0];
+  if(last && last.code === code) return;          // don't spam while typing
+  history.unshift({
+    code,
+    value: r.value !== undefined ? r.value : null,
+    desc: r.item ? (r.item.d||"") : "",
+    status: r.status,
+    ts: Date.now(),
+  });
+  if(history.length > HIST_MAX) history.length = HIST_MAX;
+  persist();
+}
+
+function buildHistory(){
+  const el = $("histList");
+  if(!el) return;
+  if(!history.length){
+    el.innerHTML = `<div class="pl-empty">History မရှိသေးပါ</div>`;
+    return;
+  }
+  el.innerHTML = history.map(h => `<div class="pl-row tap" data-code="${esc(h.code)}">
+    <div><div class="pl-name">${esc(h.code)}</div>
+      <div class="pl-sub">${esc(h.desc || h.status)}</div>
+      <div class="pl-time">${nowStr(h.ts)}</div></div>
+    <div class="pl-price">${h.value!=null ? fmt(h.value)+" Ks" : esc(h.status)}</div>
+  </div>`).join("");
+  el.querySelectorAll(".pl-row.tap").forEach(row =>
+    row.addEventListener("click", ()=>{
+      $("barcodeInput").value = row.dataset.code;
+      render(row.dataset.code);
+      closeHist();
+    }));
+}
+
+function openCart(){ buildCart(); $("cartModal").classList.add("show"); }
+function closeCart(){ $("cartModal").classList.remove("show"); }
+function openHist(){ buildHistory(); $("histModal").classList.add("show"); }
+function closeHist(){ $("histModal").classList.remove("show"); }
 
 // ---- Camera ----
 let scanner=null, scanning=false, lastScan="", lastScanT=0;
@@ -710,6 +898,10 @@ function wireModalClose(){
   $("camModal").addEventListener("click", e=>{ if(e.target.id==="camModal") stopCamera(); });
   $("priceClose").addEventListener("click", closePriceList);
   $("priceModal").addEventListener("click", e=>{ if(e.target.id==="priceModal") closePriceList(); });
+  $("cartClose").addEventListener("click", closeCart);
+  $("cartModal").addEventListener("click", e=>{ if(e.target.id==="cartModal") closeCart(); });
+  $("histClose").addEventListener("click", closeHist);
+  $("histModal").addEventListener("click", e=>{ if(e.target.id==="histModal") closeHist(); });
 }
 
 // Sell-wastage toggle lock (visual only here; controls whether wastage is used)
@@ -725,6 +917,15 @@ $("camBtn").addEventListener("click",toggleCamera);
 $("torchBtn").addEventListener("click",toggleTorch);
 $("wasteToggle").addEventListener("change",()=>{ persist(); reRenderCurrent(); });
 $("refreshBtn").addEventListener("click",loadFromRepo);
+$("addBtn").addEventListener("click",addToCart);
+$("cartBtn").addEventListener("click",openCart);
+$("histBtn").addEventListener("click",openHist);
+$("cartClear").addEventListener("click",()=>{
+  cart=[]; persist(); updateCartCount(); updateAddBtn(); buildCart(); toast("Cart cleared");
+});
+$("histClear").addEventListener("click",()=>{
+  history=[]; persist(); buildHistory(); toast("History cleared");
+});
 wireModalClose();
 $("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.target.files[0],rows=>{
   ingestStock(rows); persist(); setStatus("ready",stockRows.length+" items · manual");
@@ -736,6 +937,7 @@ $("tickerWrap").addEventListener("click", openPriceList);
 // ---- Boot: seed purity from embed, show cache, refresh stock from repo ----
 purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
 buildTicker();
+updateCartCount();
 if(restore()){
   setStatus("ready", stockRows.length+" items");
   markUpload("stock",stockRows.length); markUpload("purity",Object.keys(purityMap).length);
