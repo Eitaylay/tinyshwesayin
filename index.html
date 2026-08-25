@@ -138,6 +138,8 @@
     white-space:nowrap; padding-left:12px}
 
   /* Cart / history */
+  .refresh.active{background:var(--gold); border-color:var(--gold)}
+  .refresh.active svg{stroke:#fff}
   .cart-btn{position:relative}
   .cart-count{position:absolute; top:-5px; right:-5px; min-width:17px; height:17px;
     border-radius:9px; background:var(--gold); color:#fff; font-size:10px; font-weight:700;
@@ -159,6 +161,30 @@
     cursor:pointer; padding:4px 6px; margin-left:6px}
   .pl-time{font-size:10.5px; color:var(--muted); margin-top:2px}
   .pl-row.tap{cursor:pointer}
+
+  /* Stock finder */
+  #pageFind{display:flex; flex-direction:column; gap:0}
+  .find-form{background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:14px; display:flex; flex-direction:column; gap:9px}
+  .find-list{margin-top:12px; background:var(--paper); border:1px solid var(--line);
+    border-radius:14px; overflow:hidden}
+  .find-list .pl-row{padding:11px 14px}
+  .ff-row{display:flex; gap:9px}
+  .ff{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+  .ff label{font-size:10.5px; font-weight:600; color:var(--muted); letter-spacing:.3px}
+  .ff input,.ff select{width:100%; padding:8px 9px; border:1px solid var(--line);
+    border-radius:9px; background:var(--paper); font-size:13px; color:var(--ink);
+    font-weight:600; outline:none; font-family:inherit}
+  .ff input:focus,.ff select:focus{border-color:var(--gold)}
+  .ff-actions{display:flex; gap:9px; margin-top:2px}
+  .ff-go{flex:1; padding:10px; border:none; border-radius:10px; background:var(--gold);
+    color:#fff; font-size:13.5px; font-weight:700; cursor:pointer}
+  .ff-clear{padding:10px 16px; border:1px solid var(--line); border-radius:10px;
+    background:var(--paper); color:var(--muted); font-size:13px; font-weight:600; cursor:pointer}
+  .find-sum{margin-top:12px; padding:11px 14px; background:var(--gold-soft);
+    border-radius:12px; font-size:12.5px; color:var(--ink); font-weight:600;
+    display:flex; justify-content:space-between; align-items:baseline}
+  .find-sum b{font-family:Georgia,serif; font-size:17px; color:var(--gold)}
   .torch{padding:9px 20px; border-radius:20px; border:1px solid var(--line);
     background:var(--paper); color:var(--ink); font-size:13px; font-weight:600; cursor:pointer}
   .torch.on{background:var(--gold); color:#fff; border-color:var(--gold)}
@@ -249,6 +275,9 @@
     </div>
     <div class="head-right">
       <div class="status-dot" id="statusDot"><i></i><span id="statusText">Loading…</span></div>
+      <button class="refresh" id="findBtn" title="Stock Finder">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      </button>
       <button class="refresh" id="histBtn" title="History">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       </button>
@@ -261,6 +290,8 @@
       </button>
     </div>
   </div>
+
+  <div id="pageMain">
 
   <div class="display" id="display">
     <button class="add-btn" id="addBtn" style="display:none">+ Add</button>
@@ -334,7 +365,53 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v15 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v18 · ticker tap = ဈေးစာရင်း</span>
+  </div>
+  </div><!-- /pageMain -->
+
+  <div id="pageFind" style="display:none">
+    <div class="find-form">
+      <div class="ff-row">
+        <div class="ff"><label>Date from</label><input type="date" id="fFrom"></div>
+        <div class="ff"><label>Date to</label><input type="date" id="fTo"></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>Barcode</label><input type="text" id="fBar" placeholder="R..."></div>
+        <div class="ff"><label>Status</label><select id="fStat">
+          <option value="in stock">In Stock</option>
+          <option value="">All</option>
+          <option value="sold">Sold</option>
+        </select></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>ပစ္စည်းအမည် (Description)</label><input type="text" id="fDesc" placeholder="အမည်ဖြင့် ရှာရန်"></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>ရွှေရည် (Purity)</label><select id="fPur"></select></div>
+        <div class="ff"><label>အမျိုးအစား (Category)</label><select id="fCat"></select></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>ရွှေထည် / ကျောက်ထည်</label><select id="fKind">
+          <option value="">အားလုံး</option>
+          <option value="gold">ရွှေထည် (ကျောက်မပါ)</option>
+          <option value="gem">ကျောက်ထည် (ကျောက်ပါ)</option>
+        </select></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>အလေးချိန် g (min)</label><input type="text" inputmode="decimal" id="fWmin" placeholder="0"></div>
+        <div class="ff"><label>အလေးချိန် g (max)</label><input type="text" inputmode="decimal" id="fWmax" placeholder="∞"></div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>ရောင်းဈေး (min)</label><input type="text" inputmode="numeric" id="fVmin" placeholder="0"></div>
+        <div class="ff"><label>ရောင်းဈေး (max)</label><input type="text" inputmode="numeric" id="fVmax" placeholder="∞"></div>
+      </div>
+      <div class="ff-actions">
+        <button class="ff-clear" id="fClear">Clear</button>
+        <button class="ff-go" id="fGo">Search</button>
+      </div>
+    </div>
+    <div class="find-sum" id="findSum"></div>
+    <div class="find-list" id="findList"></div>
   </div>
 </div>
 
@@ -466,6 +543,15 @@ function gramEquiv(ws){ const w=norm(ws);
 // Purity price rounds UP (ceiling) to the nearest multiple of this.
 const PRICE_ROUND = 5000;
 
+// If a purity is ever renamed in Gold Config WITHOUT updating the existing
+// stock rows, add the old name here so those rows still price correctly:
+//   const PURITY_ALIAS = { "oldnamenormalised": "newnamenormalised" };
+const PURITY_ALIAS = {};
+function purityKey(name){
+  const k = norm(name);
+  return PURITY_ALIAS[k] || k;
+}
+
 function purityPrice(p){
   // Thai-baht purities (BS / BPK) read their price from the THB field,
   // which the user updates by hand from namchiang.com.
@@ -563,7 +649,7 @@ function lookup(barcode){
   if(isSold) return {status:row.s, item:row, sold:true};
 
   const gs=gramStandard();
-  const p=purityMap[norm(row.p)];
+  const p=purityMap[purityKey(row.p)];
   const perK=p?purityPrice(p):0;
 
   // Sell wastage always counts (as in the Excel formula). If the user has
@@ -592,7 +678,7 @@ function render(barcode){
     const inStock = (r.status||"").toLowerCase()==="in stock";
     disp.classList.add(inStock ? "instock" : "notfound");
     const it=r.item;
-    const p=purityMap[norm(it.p)];
+    const p=purityMap[purityKey(it.p)];
     const perK=p?purityPrice(p):0;
     const wt=gramsToKPY(it.w);
     const hasGem=(it.gk||it.gp||it.gy);
@@ -670,6 +756,8 @@ function ingestStock(rows){
     c:(pick(r,["Category"])||"").toString(),
     p:(pick(r,["Purity Name"])||"").toString().trim(),
     ln:(pick(r,["Length"])||"").toString().trim(),
+    dt:(pick(r,["Stock Entry Date","Date"])||"").toString().trim(),
+    su:(pick(r,["Supplier"])||"").toString().trim(),
     w:num(pick(r,["Item Weight_G","Item Weight G","Item Weight"])),
     gk:num(pick(r,["Gem_Weight_K"])), gp:num(pick(r,["Gem_Weight_P"])), gy:num(pick(r,["Gem_Weight_Y"])),
     bwk:num(pick(r,["Buy_Wastage_K"])), bwp:num(pick(r,["Buy_Wastage_P"])), bwy:num(pick(r,["Buy_Wastage_Y"])),
@@ -865,6 +953,122 @@ async function fetchThbPrice(manual){
 function startThbTimer(){
   if(thbTimer) clearInterval(thbTimer);
   if(thbAutoOn()) thbTimer = setInterval(()=>fetchThbPrice(false), THB_EVERY);
+}
+
+// ---- Stock finder ----
+// Mirrors mod_FilterSolidGoldStock: date-range + "contains" matching on
+// purity / category, extended with status and a free-text box.
+const FIND_MAX = 300;   // cap rendered rows; the summary still counts them all
+
+function toTs(s){
+  if(!s) return null;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+function fillFilterOptions(){
+  const purSel = $("fPur"), catSel = $("fCat");
+  if(!purSel || !catSel) return;
+  // =FILTER(puritysetup[Purity Name],
+  //         (puritysetup[Weight Standard]="Kyatthar") * (puritysetup[Sync]="Yes"))
+  const purs = PURITY_LIST
+    .filter(p => norm(p.ws) === "kyatthar" && p.sync)
+    .map(p => p.n);
+  const cats = [...new Set(stockRows.map(r => r.c).filter(Boolean))].sort();
+  const opt = v => `<option value="${esc(v)}">${esc(v)}</option>`;
+  purSel.innerHTML = `<option value="">အားလုံး</option>` + purs.map(opt).join("");
+  catSel.innerHTML = `<option value="">အားလုံး</option>` + cats.map(opt).join("");
+}
+
+function runFind(){
+  const from = toTs($("fFrom").value);
+  const to   = toTs($("fTo").value);
+  const bar  = $("fBar").value.trim().toLowerCase();
+  const desc = $("fDesc").value.trim().toLowerCase();
+  const pur  = $("fPur").value.trim().toLowerCase();
+  const cat  = $("fCat").value.trim().toLowerCase();
+  const kind = $("fKind").value;
+  const stat = $("fStat").value.trim().toLowerCase();
+  const wMin = parseFloat($("fWmin").value) || null;
+  const wMax = parseFloat($("fWmax").value) || null;
+  const vMin = num($("fVmin").value) || null;
+  const vMax = num($("fVmax").value) || null;
+
+  const rows = [];
+  let total = 0;
+
+  for(const r of stockRows){
+    if(from !== null || to !== null){
+      const t = toTs(r.dt);
+      if(t === null) continue;
+      if(from !== null && t < from) continue;
+      if(to !== null && t > to + 86399999) continue;   // "to" = whole day
+    }
+    if(bar  && !(r.b||"").toLowerCase().includes(bar)) continue;
+    if(desc && !(r.d||"").toLowerCase().includes(desc)) continue;
+    if(pur  && !(r.p||"").toLowerCase().includes(pur)) continue;
+    if(cat  && !(r.c||"").toLowerCase().includes(cat)) continue;
+    if(stat && (r.s||"").toLowerCase() !== stat) continue;
+
+    // ရွှေထည် = no gem weight, ကျောက်ထည် = has gem weight
+    const hasGem = (r.gk||0)+(r.gp||0)+(r.gy||0) > 0;
+    if(kind === "gold" && hasGem) continue;
+    if(kind === "gem"  && !hasGem) continue;
+
+    if(wMin !== null && r.w < wMin) continue;
+    if(wMax !== null && r.w > wMax) continue;
+
+    const res = lookup(r.b);
+    const v = (res && res.value !== undefined) ? res.value : null;
+    if(vMin !== null && (v === null || v < vMin)) continue;
+    if(vMax !== null && (v === null || v > vMax)) continue;
+
+    if(v) total += v;
+    rows.push({r, v});
+  }
+
+  $("findSum").innerHTML =
+    `<span>${rows.length} items${rows.length>FIND_MAX?` (showing ${FIND_MAX})`:""}</span>` +
+    `<b>${fmt(total)} Ks</b>`;
+
+  const el = $("findList");
+  if(!rows.length){
+    el.innerHTML = `<div class="pl-empty">မတွေ့ပါ</div>`;
+    return;
+  }
+  el.innerHTML = rows.slice(0, FIND_MAX).map(({r,v}) => `<div class="pl-row tap" data-code="${esc(r.b)}">
+    <div><div class="pl-name">${esc(r.b)}</div>
+      <div class="pl-sub">${esc(r.d || r.p || "")}</div>
+      <div class="pl-time">${esc(r.dt||"")}${r.c?" · "+esc(r.c):""} · ${r.w}g · ${esc(r.s||"")}</div></div>
+    <div class="pl-price">${v!=null ? fmt(v)+" Ks" : "—"}</div>
+  </div>`).join("");
+
+  el.querySelectorAll(".pl-row.tap").forEach(row =>
+    row.addEventListener("click", ()=>{
+      $("barcodeInput").value = row.dataset.code;
+      render(row.dataset.code);
+      showPage("main");
+    }));
+}
+
+let curPage = "main";
+function showPage(p){
+  curPage = p;
+  $("pageMain").style.display = (p === "main") ? "" : "none";
+  $("pageFind").style.display = (p === "find") ? "" : "none";
+  $("findBtn").classList.toggle("active", p === "find");
+  window.scrollTo(0, 0);
+  if(p === "find"){
+    fillFilterOptions();
+    if(!$("findList").innerHTML) runFind();
+  }
+}
+function toggleFind(){ showPage(curPage === "find" ? "main" : "find"); }
+function clearFind(){
+  ["fFrom","fTo","fBar","fDesc","fWmin","fWmax","fVmin","fVmax"].forEach(id => $(id).value = "");
+  $("fPur").value = ""; $("fCat").value = ""; $("fKind").value = "";
+  $("fStat").value = "in stock";
+  runFind();
 }
 
 // ---- Cart & history ----
@@ -1091,6 +1295,13 @@ $("refreshBtn").addEventListener("click",loadFromRepo);
 $("addBtn").addEventListener("click",addToCart);
 $("cartBtn").addEventListener("click",openCart);
 $("histBtn").addEventListener("click",openHist);
+$("findBtn").addEventListener("click",toggleFind);
+$("fGo").addEventListener("click",runFind);
+$("fClear").addEventListener("click",clearFind);
+["fBar","fDesc","fWmin","fWmax","fVmin","fVmax"].forEach(id =>
+  $(id).addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); runFind();} }));
+["fPur","fCat","fKind","fStat","fFrom","fTo"].forEach(id =>
+  $(id).addEventListener("change", runFind));
 $("cartClear").addEventListener("click",()=>{
   cart=[]; persist(); updateCartCount(); updateAddBtn(); buildCart(); toast("Cart cleared");
 });
