@@ -365,7 +365,7 @@
   <div class="foot">
     ဈေးတက်/ကျရင် Academy Price ကို ပြောင်းရုံနဲ့ အားလုံး auto update။<br>
     Stock ပြောင်းရင် CSV replace + refresh။<br>
-    <span style="opacity:.6">app v18 · ticker tap = ဈေးစာရင်း</span>
+    <span style="opacity:.6">app v19 · ticker tap = ဈေးစာရင်း</span>
   </div>
   </div><!-- /pageMain -->
 
@@ -477,12 +477,12 @@ const CSV_STOCK   = "regularstockentry.csv";
 const CSV_ACADEMY = "academyprice.csv";   // optional: single value, synced from Excel
 
 // Purity is embedded (rarely changes). To update: edit these values.
-const PURITY_EMBED = {"မီးလင်း":{"price":10000000,"pu":16,"bu":16,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":9415000,"pu":16,"bu":17,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်b":{"price":9145000,"pu":16,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8890000,"pu":16,"bu":18,"ws":"Kyatthar","sync":true},"၁၂ပဲရည်":{"price":7500000,"pu":12,"bu":16,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်pk":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်ထည်":{"price":9650000,"pu":96.5,"bu":100,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000,"pu":75,"bu":100,"ws":"Gram","sync":false},"18k-b":{"price":580000,"pu":75,"bu":100,"ws":"Gram","sync":false},"24k":{"price":700000,"pu":100,"bu":100,"ws":"Gram","sync":false}};
+const PURITY_EMBED = {"မီးလင်း":{"price":10000000,"pu":16,"bu":16,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်":{"price":9415000,"pu":16,"bu":17,"ws":"Kyatthar","sync":true},"၁၅ပဲရည်b":{"price":9145000,"pu":16,"bu":17.5,"ws":"Kyatthar","sync":true},"၁၄ပဲရည်":{"price":8890000,"pu":16,"bu":18,"ws":"Kyatthar","sync":true},"စံမှီ":{"price":7500000,"pu":12,"bu":16,"ws":"Kyatthar","sync":true},"ဘတ်second":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်pk":{"price":68800,"pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"thb":true},"ဘတ်ထည်":{"price":9650000,"pu":96.5,"bu":100,"ws":"Kyatthar","sync":true},"18k-s":{"price":590000,"pu":75,"bu":100,"ws":"Gram","sync":false},"18k-b":{"price":580000,"pu":75,"bu":100,"ws":"Gram","sync":false},"24k":{"price":700000,"pu":100,"bu":100,"ws":"Gram","sync":false}};
 
 let stockRows = [];   // [{b,s,d,c,p,w,gk,gp,gy,wk,wp,wy,gc,lc}]
 // Original-name list (for display, e.g. ticker) - PURITY_EMBED keys are
 // normalised/lowercased and unsuitable for showing to the user.
-const PURITY_LIST = [{"n":"မီးလင်း","pu":16,"bu":16,"ws":"Kyatthar","sync":true,"price":10000000},{"n":"၁၅ပဲရည်","pu":16,"bu":17,"ws":"Kyatthar","sync":true,"price":9415000},{"n":"၁၅ပဲရည် B","pu":16,"bu":17.5,"ws":"Kyatthar","sync":true,"price":9145000},{"n":"၁၄ပဲရည်","pu":16,"bu":18,"ws":"Kyatthar","sync":true,"price":8890000},{"n":"၁၂ပဲရည်","pu":12,"bu":16,"ws":"Kyatthar","sync":true,"price":7500000},{"n":"ဘတ် Second","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ် PK","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ်ထည်","pu":96.5,"bu":100,"ws":"Kyatthar","sync":true,"price":9650000},{"n":"18K-S","pu":75,"bu":100,"ws":"Gram","sync":false,"price":590000},{"n":"18K-B","pu":75,"bu":100,"ws":"Gram","sync":false,"price":580000},{"n":"24K","pu":100,"bu":100,"ws":"Gram","sync":false,"price":700000}];
+const PURITY_LIST = [{"n":"မီးလင်း","pu":16,"bu":16,"ws":"Kyatthar","sync":true,"price":10000000},{"n":"၁၅ပဲရည်","pu":16,"bu":17,"ws":"Kyatthar","sync":true,"price":9415000},{"n":"၁၅ပဲရည် B","pu":16,"bu":17.5,"ws":"Kyatthar","sync":true,"price":9145000},{"n":"၁၄ပဲရည်","pu":16,"bu":18,"ws":"Kyatthar","sync":true,"price":8890000},{"n":"စံမှီ","pu":12,"bu":16,"ws":"Kyatthar","sync":true,"price":7500000},{"n":"ဘတ် Second","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ် PK","pu":96.5,"bu":100,"ws":"Bahtthar","sync":false,"price":68800,"thb":true},{"n":"ဘတ်ထည်","pu":96.5,"bu":100,"ws":"Kyatthar","sync":true,"price":9650000},{"n":"18K-S","pu":75,"bu":100,"ws":"Gram","sync":false,"price":590000},{"n":"18K-B","pu":75,"bu":100,"ws":"Gram","sync":false,"price":580000},{"n":"24K","pu":100,"bu":100,"ws":"Gram","sync":false,"price":700000}];
 
 let purityMap = {};   // norm(name) -> {price,pu,bu,ws,sync}  (seeded from PURITY_EMBED)
 let stockIndex = {};  // upper(barcode) -> row  (fast lookup for 3k+ items)
@@ -546,7 +546,7 @@ const PRICE_ROUND = 5000;
 // If a purity is ever renamed in Gold Config WITHOUT updating the existing
 // stock rows, add the old name here so those rows still price correctly:
 //   const PURITY_ALIAS = { "oldnamenormalised": "newnamenormalised" };
-const PURITY_ALIAS = {};
+const PURITY_ALIAS = {"၁၂ပဲရည်":"စံမှီ"};
 function purityKey(name){
   const k = norm(name);
   return PURITY_ALIAS[k] || k;
