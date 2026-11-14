@@ -259,6 +259,18 @@
     transition:transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .35s; z-index:50;
     max-width:90vw; text-align:center}
   .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+
+  /* Bottom navigation */
+  body{padding-bottom:88px}
+  .bnav{position:fixed; left:0; right:0; bottom:0; z-index:45; display:flex;
+    background:var(--paper); border-top:1px solid var(--line);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .bn{flex:1; border:none; background:transparent; display:flex; flex-direction:column;
+    align-items:center; gap:2px; padding:6px 0; cursor:pointer; color:var(--muted);
+    font-size:11px; font-weight:600; font-family:inherit}
+  .bn svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8}
+  .bn.active{color:var(--gold)}
+  .toast{bottom:84px}
 </style>
 </head>
 <body>
@@ -275,9 +287,6 @@
     </div>
     <div class="head-right">
       <div class="status-dot" id="statusDot"><i></i><span id="statusText">Loading…</span></div>
-      <button class="refresh" id="findBtn" title="Stock Finder">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-      </button>
       <button class="refresh" id="histBtn" title="History">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       </button>
@@ -413,7 +422,33 @@
     <div class="find-sum" id="findSum"></div>
     <div class="find-list" id="findList"></div>
   </div>
+
+  <div id="pageCode" style="display:none">
+    <div class="display">
+      <div class="code">Code</div>
+      <div class="price" id="codeOut">—</div>
+    </div>
+    <div class="scanrow" style="margin-top:14px">
+      <input id="codeIn" type="text" autocomplete="off" placeholder="Code ရိုက်ပါ"
+        style="text-transform:uppercase">
+    </div>
+  </div>
 </div>
+
+<nav class="bnav">
+  <button class="bn active" data-page="main">
+    <svg viewBox="0 0 24 24"><path d="M3 9V7a2 2 0 012-2h2M17 5h2a2 2 0 012 2v2M21 15v2a2 2 0 01-2 2h-2M7 19H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
+    <span>ဈေးစစ်</span>
+  </button>
+  <button class="bn" data-page="find">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+    <span>ရှာ</span>
+  </button>
+  <button class="bn" data-page="code">
+    <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+    <span>Code</span>
+  </button>
+</nav>
 
 <!-- Camera scan modal -->
 <div class="cam-modal" id="camModal">
@@ -1056,7 +1091,10 @@ function showPage(p){
   curPage = p;
   $("pageMain").style.display = (p === "main") ? "" : "none";
   $("pageFind").style.display = (p === "find") ? "" : "none";
-  $("findBtn").classList.toggle("active", p === "find");
+  $("pageCode").style.display = (p === "code") ? "" : "none";
+  document.querySelectorAll(".bnav .bn").forEach(b =>
+    b.classList.toggle("active", b.dataset.page === p));
+  if(p === "code") $("codeIn").focus();
   window.scrollTo(0, 0);
   if(p === "find"){
     fillFilterOptions();
@@ -1295,7 +1333,6 @@ $("refreshBtn").addEventListener("click",loadFromRepo);
 $("addBtn").addEventListener("click",addToCart);
 $("cartBtn").addEventListener("click",openCart);
 $("histBtn").addEventListener("click",openHist);
-$("findBtn").addEventListener("click",toggleFind);
 $("fGo").addEventListener("click",runFind);
 $("fClear").addEventListener("click",clearFind);
 ["fBar","fDesc","fWmin","fWmax","fVmin","fVmax"].forEach(id =>
@@ -1315,6 +1352,29 @@ $("stockFile").addEventListener("change",e=>{ if(e.target.files[0]) parseFile(e.
 
 // tap the ticker to see the static full price list
 $("tickerWrap").addEventListener("click", openPriceList);
+
+// ---- Labor cipher (must match LaborCipher in the Thai Gold label VBA) ----
+// P H Y U S I N T A G = 1 2 3 4 5 6 7 8 9 0 ; X = same digit as previous
+const CIPHER_KEY = "PHYUSINTAG";
+function decodeCipher(s){
+  s = (s||"").toUpperCase().replace(/[^A-Z]/g,"");
+  if(!s) return null;
+  let out = "", prev = "";
+  for(const ch of s){
+    if(ch === "X"){ if(!prev) return null; out += prev; continue; }
+    const i = CIPHER_KEY.indexOf(ch);
+    if(i < 0) return null;
+    prev = String((i+1) % 10);
+    out += prev;
+  }
+  return out;
+}
+$("codeIn").addEventListener("input", e=>{
+  const d = decodeCipher(e.target.value);
+  $("codeOut").textContent = e.target.value.trim() ? (d!==null ? fmt(+d) : "?") : "—";
+});
+document.querySelectorAll(".bnav .bn").forEach(b =>
+  b.addEventListener("click", ()=>showPage(b.dataset.page)));
 
 // ---- Boot: seed purity from embed, show cache, refresh stock from repo ----
 purityMap = PURITY_EMBED;   // rarely changes; edit in source to update
